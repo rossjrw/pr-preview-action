@@ -4,6 +4,10 @@ description: >
   Deploy a pull request preview to GitHub Pages, similar to Vercel and
   Netlify.
 
+branding:
+  icon: git-pull-request
+  color: yellow
+
 inputs:
   
   preview-branch:
