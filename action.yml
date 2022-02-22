@@ -39,19 +39,26 @@ inputs:
       Equivalent to 'folder' setting in JamesIves/github-pages-deploy-action.
     required: false
     default: .
-  teardown:
+  action:
     description: >
-      If set to `false` or not set, will attempt to deploy the preview and
-      overwrite any existing preview in that location.
+      Determines what this action will do when it is executed. Supported
+      values: `deploy`, `remove`, `null`, `auto` (default).
 
-      If set to `true`, will attempt to remove the preview in that
+      If set to `deploy`, will attempt to deploy the preview and overwrite
+      any existing preview in that location.
+
+      If set to `remove`, will attempt to remove the preview in that
       location.
-      
-      I recommend setting teardown to `false` on
-      `pull_request.types.synchronize` events, and to `true` on
-      `pull_request.types.closed` events.
+
+      If set to `null`, the action will not do anything.
+
+      If set to `auto`, the action will try to determine whether to deploy
+      or remove the preview. It will deploy the preview on
+      `pull_request.types.synchronize` events, and remove it on
+      `pull_request.types.closed` events. It will not do anything for all
+      other events. `auto` is the default value.
     required: false
-    default: false
+    default: auto
 
 runs:
   using: composite
