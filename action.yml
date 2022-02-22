@@ -1,0 +1,55 @@
+name: PR Preview
+author: Ross Williams
+description: >
+  Deploy a pull request preview to GitHub Pages, similar to Vercel and
+  Netlify.
+
+inputs:
+  
+  preview-branch:
+    description: >
+      Branch on which the previews will be deployed. This should be the
+      same branch that your GitHub Pages site is deployed from.
+    required: false
+    default: gh-pages
+  umbrella-dir:
+    description: >
+      Name of the directory containing all previews. All previews will be
+      created inside this directory.
+      
+      The umbrella directory is used to namespace previews from your main
+      branch's deployment on GitHub Pages.
+
+      Set to `.` to place preview directories into the root directory, but
+      be aware that this may cause your main branch's deployment to
+      interfere with your preview deployments (and vice-versa!)
+    required: false
+    default: pr-preview
+  source-dir:
+    description: >
+      Directory containing files to deploy.
+
+      E.g. if your project builds to `./dist/` you would put `dist` here.
+      For the root directory, put `.` here (this is the default).
+
+      Equivalent to 'folder' setting in JamesIves/github-pages-deploy-action.
+    required: false
+    default: .
+  teardown:
+    description: >
+      If set to `false` or not set, will attempt to deploy the preview and
+      overwrite any existing preview in that location.
+
+      If set to `true`, will attempt to remove the preview in that
+      location.
+      
+      I recommend setting teardown to `false` on
+      `pull_request.types.synchronize` events, and to `true` on
+      `pull_request.types.closed` events.
+    required: false
+    default: false
+
+runs:
+  using: composite
+  steps:
+    
