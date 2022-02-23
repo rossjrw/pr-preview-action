@@ -1,0 +1,8 @@
+name: experiment
+on: workflow_dispatch
+jobs:
+  experiment:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo $GITHUB_EVENT_PATH
+      - run: cat $GITHUB_EVENT_PATH
