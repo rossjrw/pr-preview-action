@@ -9,7 +9,6 @@ branding:
   color: yellow
 
 inputs:
-  
   preview-branch:
     description: >
       Branch on which the previews will be deployed. This should be the
@@ -20,7 +19,7 @@ inputs:
     description: >
       Name of the directory containing all previews. All previews will be
       created inside this directory.
-      
+
       The umbrella directory is used to namespace previews from your main
       branch's deployment on GitHub Pages.
 
@@ -61,6 +60,5 @@ inputs:
     default: auto
 
 runs:
-  using: composite
-  steps:
-    
+  using: node16
+  main: dist/main.js
