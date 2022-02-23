@@ -33,14 +33,22 @@ if (action === "auto") {
 // Use PR number to set the directory name
 const prDir = `pr-${String(context.payload.number)}`;
 
+const deploySettings = {
+  branch: previewBranch,
+  folder: sourceDir,
+  isTest: TestFlag.NONE,
+  silent: false,
+  targetFolder: path.join(umbrellaDir, prDir),
+  workspace: process.env.GITHUB_WORKSPACE || "",
+};
+
 if (action === "deploy") {
   core.info("deploying");
-  void deploy({
-    branch: previewBranch,
-    folder: sourceDir,
-    isTest: TestFlag.NONE,
-    silent: false,
-    targetFolder: path.join(umbrellaDir, prDir),
-    workspace: process.env.GITHUB_WORKSPACE || "",
-  });
+  void deploy(deploySettings);
+}
+
+if (action === "remove") {
+  core.info("removing");
+  // Create a temporary, empty dir to overwrite deployed files with nothing
+  void deploy(Object.assign({}, deploySettings, { folder: "$(mktemp -d)" }));
 }
