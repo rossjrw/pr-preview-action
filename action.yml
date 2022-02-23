@@ -35,7 +35,9 @@ inputs:
       E.g. if your project builds to `./dist/` you would put `dist` here.
       For the root directory, put `.` here (this is the default).
 
-      Equivalent to 'folder' setting in JamesIves/github-pages-deploy-action.
+      Equivalent to JamesIves/github-pages-deploy-action 'folder' setting.
+
+      Will be ignored when removing a preview.
     required: false
     default: .
   action:
