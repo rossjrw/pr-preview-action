@@ -16,8 +16,8 @@ if [[ $event_type == opened ]]; then
   exit 0
 fi
 
-if [[ $event_type == synchronized ]]; then
-  echo "synchronized event; deploying"
+if [[ $event_type == synchronize ]]; then
+  echo "synchronize event; deploying"
   echo "action=deploy" >> "$GITHUB_ENV"
   exit 0
 fi
