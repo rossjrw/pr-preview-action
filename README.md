@@ -35,7 +35,13 @@ default settings, usage is very simple:
 # .github/workflows/preview.yml
 name: Deploy PR previews
 
-on: pull_request
+on:
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - closed
 
 jobs:
   deploy-preview:
@@ -58,6 +64,13 @@ jobs:
 Consider limiting this workflow to run [only when relevant files are
 edited](https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#onpushpull_requestpull_request_targetpathspaths-ignore)
 to avoid deploying previews unnecessarily.
+
+Be sure to [pick the right event
+types](https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#pull_request)
+for the `pull_request` event. It only comes with `opened`, `reopened`, and
+`synchronize` by default &mdash; but this Action assumes by default that
+the preview should be removed during the `closed` event, which it only sees
+if you explicitly add it to the workflow.
 
 ### Don't delete your previews when deploying a new release!
 
@@ -130,9 +143,10 @@ the `with` parameter.
   - `auto`: the action will try to determine whether to deploy or remove
     the preview based on [the emitted
     event](https://docs.github.com/en/developers/webhooks-and-events/webhooks/webhook-events-and-payloads#pull_request).
-    It will deploy the preview on `pull_request.types.synchronize` and
-    `.opened` events, and remove it on `pull_request.types.closed` events.
-    It will not do anything for all other events.
+    It will deploy the preview on `pull_request.types.opened`, `.reopened`
+    and `.synchronize` events; and remove it on `pull_request.types.closed`
+    events. It will not do anything for all other events, even if you
+    explicitly specify that the workflow should run on them.
   - `none` and all other values: the action will not do anything.
 
   Default value: `auto`
@@ -150,6 +164,7 @@ on:
   pull_request:
     types:
       - opened
+      - reopened
       - synchronize
       - closed
 jobs:
@@ -179,6 +194,7 @@ on:
   pull_request:
     types:
       - opened
+      - reopened
       - synchronize
       - closed
 jobs:
@@ -188,7 +204,7 @@ jobs:
       - uses: actions/checkout@v2
       - run: npm i && npm run build
       - uses: rossjrw/pr-preview-action@v1
-        if: contains(['opened', 'synchronize'], github.event.action)
+        if: contains(['opened', 'reopened', 'synchronize'], github.event.action)
         with:
           source-dir: ./build/
           action: deploy
@@ -201,9 +217,9 @@ jobs:
 
 ### Permanent previews
 
-If you want to keep PR previews around forever, even after the associated ,
-you don't want the cleanup behaviour of `auto` &mdash; call `deploy` and
-never call `remove`:
+If you want to keep PR previews around forever, even after the associated
+PR has been closed, you don't want the cleanup behaviour of `auto` &mdash;
+call `deploy` and never call `remove`:
 
 ```yml
 # .github/workflows/everlasting-preview.yml
