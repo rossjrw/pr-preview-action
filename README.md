@@ -1,4 +1,4 @@
-# PR Preview Action
+# Deploy PR Preview action
 
 [GitHub Action](https://github.com/features/actions) that deploys previews
 of pull requests to [GitHub Pages](https://pages.github.com/). Works on any

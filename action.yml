@@ -1,4 +1,4 @@
-name: PR Preview
+name: Deploy PR Preview
 author: Ross Williams
 description: >
   Deploy a pull request preview to GitHub Pages, similar to Vercel and
