@@ -56,7 +56,7 @@ runs:
         targetdir+=${{ github.event.number }}
         echo "targetdir=$targetdir" >> $GITHUB_ENV
 
-        echo "datetime=$(date '+%Y-%m-%d %H:%m %Z')" >> $GITHUB_ENV
+        echo "datetime=$(date '+%Y-%m-%d %H:%M %Z')" >> $GITHUB_ENV
       shell: bash
 
     - name: Determine auto action
