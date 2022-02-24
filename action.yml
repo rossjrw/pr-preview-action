@@ -62,5 +62,39 @@ inputs:
     default: auto
 
 runs:
-  using: node16
-  main: dist/main.js
+  using: composite
+  steps:
+    - name: Store environment variables
+      run: |
+        echo "action=${{ inputs.action }}" >> $GITHUB_ENV
+        echo "emptydir=$(mktemp -d)" >> $GITHUB_ENV
+
+        pagesurl=$(echo $GITHUB_REPOSITORY | sed 's/\//.github.io\//')
+        echo "pagesurl=$pagesurl" >> $GITHUB_ENV
+
+        targetdir=${{ inputs.umbrella-dir }}
+        targetdir+="/pr-"
+        targetdir+=${{ github.event.number }}
+        echo "targetdir=$targetdir" >> $GITHUB_ENV
+      shell: bash
+
+    - name: Determine auto action
+      if: env.action == "auto"
+      run: ./lib/determine-auto-action.sh
+      shell: bash
+
+    - name: Deploy preview directory
+      if: env.action == "deploy"
+      uses: JamesIves/github-pages-deploy-action@4
+      with:
+        branch: ${{ inputs.preview-branch }}
+        folder: ${{ inputs.source-dir }}
+        target-folder: ${{ env.targetdir }}
+
+    - name: Remove preview directory
+      if: env.action == "remove"
+      uses: JamesIves/github-pages-deploy-action@4
+      with:
+        branch: ${{ inputs.preview-branch }}
+        folder: ${{ env.emptydir }}
+        target-folder: ${{ env.targetdir }}
