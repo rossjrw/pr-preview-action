@@ -10,48 +10,27 @@ branding:
 
 inputs:
   preview-branch:
-    description: >
-      Branch on which the previews will be deployed. This should be the
-      same branch that your GitHub Pages site is deployed from.
+    description: Branch on which the previews will be deployed.
     required: false
     default: gh-pages
   umbrella-dir:
-    description: >
-      Name of the directory containing all previews. All previews will be
-      created inside this directory.
-
-      The umbrella directory is used to namespace previews from your main
-      branch's deployment on GitHub Pages.
-
-      Set to `.` to place preview directories into the root directory, but
-      be aware that this may cause your main branch's deployment to
-      interfere with your preview deployments (and vice-versa!)
+    description: Name of the directory containing all previews.
     required: false
     default: pr-preview
   source-dir:
-    description: >
-      Directory containing files to deploy.
-
-      E.g. if your project builds to `./dist/` you would put `dist` here.
-      For the root directory, put `.` here (this is the default).
-
-      Equivalent to JamesIves/github-pages-deploy-action 'folder' setting.
-
-      Will be ignored when removing a preview.
+    description: Directory containing files to deploy.
     required: false
     default: .
   action:
     description: >
       Determines what this action will do when it is executed. Supported
-      values: `deploy`, `remove`, `null`, `auto` (default).
+      values: `deploy`, `remove`, `auto` (default).
 
       If set to `deploy`, will attempt to deploy the preview and overwrite
       any existing preview in that location.
 
       If set to `remove`, will attempt to remove the preview in that
       location.
-
-      If set to `null`, the action will not do anything.
 
       If set to `auto`, the action will try to determine whether to deploy
       or remove the preview. It will deploy the preview on
