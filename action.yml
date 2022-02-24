@@ -44,22 +44,25 @@ runs:
   using: composite
   steps:
     - name: Store environment variables
+      env:
+        action: ${{ inputs.action }}
+        umbrella: ${{ inputs.umbrella-dir }}
+        pr: ${{ github.event.number }}
+        actionref: ${{ github.action_ref }}
+        actionrepo: ${{ github.action_repository }}
       run: |
-        echo "action=${{ inputs.action }}" >> $GITHUB_ENV
+        echo "action=$action" >> $GITHUB_ENV
         echo "emptydir=$(mktemp -d)" >> $GITHUB_ENV
 
         pagesurl=$(echo $GITHUB_REPOSITORY | sed 's/\//.github.io\//')
         echo "pagesurl=$pagesurl" >> $GITHUB_ENV
 
-        targetdir=${{ inputs.umbrella-dir }}
-        targetdir+="/pr-"
-        targetdir+=${{ github.event.number }}
-        echo "targetdir=$targetdir" >> $GITHUB_ENV
+        echo "targetdir=$umbrella/pr-$pr" >> $GITHUB_ENV
 
         echo "datetime=$(date '+%Y-%m-%d %H:%M %Z')" >> $GITHUB_ENV
 
-        echo "actionref=${{ github.action_ref }}" >> $GITHUB_ENV
-        echo "actionrepo=${{ github.action_repository }}" >> $GITHUB_ENV
+        echo "actionref=$actionref" >> $GITHUB_ENV
+        echo "actionrepo=$actionrepo" >> $GITHUB_ENV
       shell: bash
 
     - name: Determine auto action
@@ -107,8 +110,8 @@ runs:
       with:
         header: pr-preview
         message: "\
-          [PR Preview Action ${{ github.action_ref }}]\
-          (${{ github.server_url }}/${{ github.action_repository }})
+          [PR Preview Action ${{ env.actionref }}]\
+          (${{ github.server_url }}/${{ env.actionrepo }})
 
           :---:
 
