@@ -1,19 +1,8 @@
 {
   "name": "pr-preview",
   "version": "0.0.0",
-  "main": "dist/main.js",
-  "scripts": {},
   "devDependencies": {
-    "@types/node": "^17.0.19",
-    "@typescript-eslint/eslint-plugin": "^5.12.1",
-    "@typescript-eslint/parser": "^5.12.1",
-    "eslint": "^8.9.0",
     "prettier": "2.5.1",
-    "typescript": "^4.5.5"
-  },
-  "dependencies": {
-    "@actions/core": "^1.6.0",
-    "@actions/github": "^5.0.0",
-    "@jamesives/github-pages-deploy-action": "^4.2.5"
+    "prettier-plugin-sh": "^0.8.1"
   }
 }
