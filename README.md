@@ -164,9 +164,37 @@ jobs:
           action: auto
 ```
 
-### Reimplementing `auto`
+### Only remove previews for unmerged PRs
 
-If you don't trust my implementation of `auto`, you can do it yourself
+Information from the context and conditionals can be used to make more
+complex decisions about what to do with previews; for example, removing
+only those associated with _unmerged_ PRs when they are closed:
+
+```yml
+# .github/workflows/preview.yml
+name: Deploy PR previews; removed closed unmerged PR previews
+on:
+  pull_request:
+    types:
+      - synchronize
+      - closed
+jobs:
+  deploy-preview:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - run: npm i && npm run build
+      - uses: rossjrw/pr-preview-action@v1
+        if: github.event.action == "synchronize"
+        with:
+          source-dir: ./build/
+          action: deploy
+      - uses: rossjrw/pr-preview-action@v1
+        if: github.event.action == "closed" && !github.event.pull_request.merged
+        with:
+          source-dir: ./build/
+          action: remove
+```
 
 ### Permanent previews
 
