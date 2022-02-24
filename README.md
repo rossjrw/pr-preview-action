@@ -223,8 +223,6 @@ jobs:
         with:
           source-dir: ./build/
           action: deploy
-          # or,
-          # action: github. && <true-value> || <false-value>
 ```
 
 ## Acknowledgements
