@@ -61,7 +61,7 @@ runs:
 
     - name: Determine auto action
       if: env.action == 'auto'
-      run: ./lib/determine-auto-action.sh
+      run: ${{ github.action_path }}/lib/determine-auto-action.sh
       shell: bash
 
     - name: Deploy preview directory
