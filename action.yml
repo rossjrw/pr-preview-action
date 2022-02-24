@@ -76,6 +76,8 @@ runs:
         targetdir+="/pr-"
         targetdir+=${{ github.event.number }}
         echo "targetdir=$targetdir" >> $GITHUB_ENV
+
+        echo "datetime=$(date '+%Y-%m-%d %H:%m %Z')" >> $GITHUB_ENV
       shell: bash
 
     - name: Determine auto action
@@ -91,6 +93,24 @@ runs:
         folder: ${{ inputs.source-dir }}
         target-folder: ${{ env.targetdir }}
 
+    - name: Leave a comment after deployment
+      if: env.action == "deploy"
+      uses: marocchino/sticky-pull-request-comment@v2
+      with:
+        header: pr-preview
+        message: "\
+          [PR Preview Action ${{ github.action_ref }}]\
+          (${{ github.server_url }}/${{ github.action_repository }})
+
+          :---:
+
+          :rocket: Deployed preview to
+          https://${{ env.pagesurl }}/${{ env.targetdir }}
+
+          commit ${{ github.sha }}
+          @ ${{ env.datetime }}
+          "
+
     - name: Remove preview directory
       if: env.action == "remove"
       uses: JamesIves/github-pages-deploy-action@4
@@ -98,3 +118,19 @@ runs:
         branch: ${{ inputs.preview-branch }}
         folder: ${{ env.emptydir }}
         target-folder: ${{ env.targetdir }}
+
+    - name: Leave a comment after removal
+      if: env.action == "remove"
+      uses: marocchino/sticky-pull-request-comment@v2
+      with:
+        header: pr-preview
+        message: "\
+          [PR Preview Action ${{ github.action_ref }}]\
+          (${{ github.server_url }}/${{ github.action_repository }})
+
+          :---:
+
+          Preview removed because the pull request was closed.
+
+          ${{ env.datetime }}
+          "
