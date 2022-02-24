@@ -10,6 +10,12 @@ echo "event is pull_request"
 
 event_type=$(jq -r ".action" "$GITHUB_EVENT_PATH")
 
+if [[ $event_type == opened ]]; then
+  echo "opened event; deploying"
+  echo "action=deploy" >> "$GITHUB_ENV"
+  exit 0
+fi
+
 if [[ $event_type == synchronized ]]; then
   echo "synchronized event; deploying"
   echo "action=deploy" >> "$GITHUB_ENV"

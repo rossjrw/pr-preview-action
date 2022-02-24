@@ -128,10 +128,11 @@ the `with` parameter.
     existing preview in that location.
   - `remove`: will attempt to remove the preview in that location.
   - `auto`: the action will try to determine whether to deploy or remove
-    the preview. It will deploy the preview on
-    `pull_request.types.synchronize` events, and remove it on
-    `pull_request.types.closed` events. It will not do anything for all other
-    events.
+    the preview based on [the emitted
+    event](https://docs.github.com/en/developers/webhooks-and-events/webhooks/webhook-events-and-payloads#pull_request).
+    It will deploy the preview on `pull_request.types.synchronize` and
+    `.opened` events, and remove it on `pull_request.types.closed` events.
+    It will not do anything for all other events.
   - `none` and all other values: the action will not do anything.
 
   Default value: `auto`
@@ -148,6 +149,7 @@ name: Deploy PR previews
 on:
   pull_request:
     types:
+      - opened
       - synchronize
       - closed
 jobs:
@@ -176,6 +178,7 @@ name: Deploy PR previews; removed closed unmerged PR previews
 on:
   pull_request:
     types:
+      - opened
       - synchronize
       - closed
 jobs:
@@ -185,7 +188,7 @@ jobs:
       - uses: actions/checkout@v2
       - run: npm i && npm run build
       - uses: rossjrw/pr-preview-action@v1
-        if: github.event.action == "synchronize"
+        if: contains(['opened', 'synchronize'], github.event.action)
         with:
           source-dir: ./build/
           action: deploy
@@ -208,6 +211,7 @@ name: Deploy everlasting PR preview
 on:
   pull_request:
     types:
+      - opened
       - synchronize
 jobs:
   deploy-preview:
