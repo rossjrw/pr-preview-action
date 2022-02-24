@@ -60,12 +60,12 @@ runs:
       shell: bash
 
     - name: Determine auto action
-      if: env.action == "auto"
+      if: env.action == 'auto'
       run: ./lib/determine-auto-action.sh
       shell: bash
 
     - name: Deploy preview directory
-      if: env.action == "deploy"
+      if: env.action == 'deploy'
       uses: JamesIves/github-pages-deploy-action@4
       with:
         branch: ${{ inputs.preview-branch }}
@@ -73,7 +73,7 @@ runs:
         target-folder: ${{ env.targetdir }}
 
     - name: Leave a comment after deployment
-      if: env.action == "deploy"
+      if: env.action == 'deploy'
       uses: marocchino/sticky-pull-request-comment@v2
       with:
         header: pr-preview
@@ -91,7 +91,7 @@ runs:
           "
 
     - name: Remove preview directory
-      if: env.action == "remove"
+      if: env.action == 'remove'
       uses: JamesIves/github-pages-deploy-action@4
       with:
         branch: ${{ inputs.preview-branch }}
@@ -99,7 +99,7 @@ runs:
         target-folder: ${{ env.targetdir }}
 
     - name: Leave a comment after removal
-      if: env.action == "remove"
+      if: env.action == 'remove'
       uses: marocchino/sticky-pull-request-comment@v2
       with:
         header: pr-preview
