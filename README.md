@@ -95,7 +95,7 @@ parameter:
 
 ```yml
 # .github/workflows/build-deploy-pages-site.yml
-- steps:
+steps:
   ...
   - uses: JamesIves/github-pages-deploy-action@v4
     ...
@@ -190,6 +190,22 @@ jobs:
           action: auto
 ```
 
+### Deployment from `docs/`
+
+If your Pages site is built to `build/` and deployed from the `docs/`
+directory on the `main` branch:
+
+```yml
+# .github/workflows/preview.yml
+steps:
+  ...
+  - uses: rossjrw/pr-preview-action@v1
+    with:
+      source-dir: build
+      preview-branch: main
+      umbrella-dir: docs/pr-preview
+```
+
 ### Only remove previews for unmerged PRs
 
 Information from the context and conditionals can be used to make more
@@ -198,31 +214,18 @@ only those associated with _unmerged_ PRs when they are closed:
 
 ```yml
 # .github/workflows/preview.yml
-name: Deploy PR previews; removed closed unmerged PR previews
-concurrency: preview-${{ github.ref }}
-on:
-  pull_request:
-    types:
-      - opened
-      - reopened
-      - synchronize
-      - closed
-jobs:
-  deploy-preview:
-    runs-on: ubuntu-20.04
-    steps:
-      - uses: actions/checkout@v2
-      - run: npm i && npm run build
-      - uses: rossjrw/pr-preview-action@v1
-        if: contains(['opened', 'reopened', 'synchronize'], github.event.action)
-        with:
-          source-dir: ./build/
-          action: deploy
-      - uses: rossjrw/pr-preview-action@v1
-        if: github.event.action == "closed" && !github.event.pull_request.merged
-        with:
-          source-dir: ./build/
-          action: remove
+steps:
+  ...
+  - uses: rossjrw/pr-preview-action@v1
+    if: contains(['opened', 'reopened', 'synchronize'], github.event.action)
+    with:
+      source-dir: ./build/
+      action: deploy
+  - uses: rossjrw/pr-preview-action@v1
+    if: github.event.action == "closed" && !github.event.pull_request.merged
+    with:
+      source-dir: ./build/
+      action: remove
 ```
 
 ### Permanent previews
