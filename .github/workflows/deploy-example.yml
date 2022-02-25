@@ -14,3 +14,4 @@ jobs:
         with:
           branch: gh-pages
           folder: test
+          clean-exclude: pr-preview/
