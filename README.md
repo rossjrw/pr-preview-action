@@ -15,6 +15,13 @@ Features:
   request is closed
 - Can be configured to override any of these behaviours
 
+<p align="center">
+  <img src="https://github.com/rossjrw/pr-preview-action/blob/main/.github/sample-preview-link.png" alt="Sample comment left by the action">
+</p>
+<p align="center">
+  Pictured: https://github.com/rossjrw/pr-preview-action/pull/1
+</p>
+
 Preview URLs look like this:
 `https://[owner].github.io/[repo]/pr-preview/pr-[number]/`
 
