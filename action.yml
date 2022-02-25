@@ -81,7 +81,7 @@ runs:
         commit-message: Deploy preview for PR ${{ env.pr }} 🛫
 
     - name: Leave a comment after deployment
-      if: env.action == 'deploy'
+      if: env.action == 'deploy' && env.deployment_status == 'success'
       uses: marocchino/sticky-pull-request-comment@v2
       with:
         header: pr-preview
@@ -111,7 +111,7 @@ runs:
         commit-message: Remove preview for PR ${{ env.pr }} 🛬
 
     - name: Leave a comment after removal
-      if: env.action == 'remove'
+      if: env.action == 'remove' && env.deployment_status == 'success'
       uses: marocchino/sticky-pull-request-comment@v2
       with:
         header: pr-preview
