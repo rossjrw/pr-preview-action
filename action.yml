@@ -52,13 +52,14 @@ runs:
         actionrepo: ${{ github.action_repository }}
       run: |
         echo "action=$action" >> $GITHUB_ENV
-        echo "emptydir=$(mktemp -d)" >> $GITHUB_ENV
+        echo "targetdir=$umbrella/pr-$pr" >> $GITHUB_ENV
+        echo "pr=$pr" >> $GITHUB_ENV
 
         pagesurl=$(echo $GITHUB_REPOSITORY | sed 's/\//.github.io\//')
         echo "pagesurl=$pagesurl" >> $GITHUB_ENV
 
-        echo "targetdir=$umbrella/pr-$pr" >> $GITHUB_ENV
 
+        echo "emptydir=$(mktemp -d)" >> $GITHUB_ENV
         echo "datetime=$(date '+%Y-%m-%d %H:%M %Z')" >> $GITHUB_ENV
 
         echo "actionref=$actionref" >> $GITHUB_ENV
@@ -77,6 +78,7 @@ runs:
         branch: ${{ inputs.preview-branch }}
         folder: ${{ inputs.source-dir }}
         target-folder: ${{ env.targetdir }}
+        commit-message: Deploy preview for ${{ github.sha }} on PR ${{ env.pr }}
 
     - name: Leave a comment after deployment
       if: env.action == 'deploy'
@@ -103,6 +105,7 @@ runs:
         branch: ${{ inputs.preview-branch }}
         folder: ${{ env.emptydir }}
         target-folder: ${{ env.targetdir }}
+        commit-message: Remove preview for ${{ github.sha }} on PR ${{ env.pr }}
 
     - name: Leave a comment after removal
       if: env.action == 'remove'
