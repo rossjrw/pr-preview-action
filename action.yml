@@ -86,8 +86,9 @@ runs:
       with:
         header: pr-preview
         message: "\
-          [PR Preview Action ${{ env.actionref }}]\
+          [PR Preview Action]\
           (${{ github.server_url }}/${{ env.actionrepo }})
+          ${{ env.actionref }}
 
           :---:
 
@@ -113,8 +114,9 @@ runs:
       with:
         header: pr-preview
         message: "\
-          [PR Preview Action ${{ env.actionref }}]\
+          [PR Preview Action]\
           (${{ github.server_url }}/${{ env.actionrepo }})
+          ${{ env.actionref }}
 
           :---:
 
