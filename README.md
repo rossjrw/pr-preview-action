@@ -43,6 +43,8 @@ on:
       - synchronize
       - closed
 
+concurrency: preview-${{ github.ref }}
+
 jobs:
   deploy-preview:
     runs-on: ubuntu-20.04
@@ -71,6 +73,12 @@ for the `pull_request` event. It only comes with `opened`, `reopened`, and
 `synchronize` by default &mdash; but this Action assumes by default that
 the preview should be removed during the `closed` event, which it only sees
 if you explicitly add it to the workflow.
+
+I highly recommend [setting a concurrency
+group](https://docs.github.com/en/actions/using-jobs/using-concurrency)
+scoped to each PR using `github.ref` as above, which should prevent the
+preview and comment from desynchronising if you are e.g. committing very
+frequently.
 
 ### Don't delete your previews when deploying a new release!
 
@@ -155,11 +163,12 @@ the `with` parameter.
 
 ### Full example
 
-Full example with all default values pointlessly added:
+Full example with all default values added:
 
 ```yml
 # .github/workflows/preview.yml
 name: Deploy PR previews
+concurrency: preview-${{ github.ref }}
 on:
   pull_request:
     types:
@@ -190,6 +199,7 @@ only those associated with _unmerged_ PRs when they are closed:
 ```yml
 # .github/workflows/preview.yml
 name: Deploy PR previews; removed closed unmerged PR previews
+concurrency: preview-${{ github.ref }}
 on:
   pull_request:
     types:
@@ -224,6 +234,7 @@ call `deploy` and never call `remove`:
 ```yml
 # .github/workflows/everlasting-preview.yml
 name: Deploy everlasting PR preview
+concurrency: preview-${{ github.ref }}
 on:
   pull_request:
     types:
