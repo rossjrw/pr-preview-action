@@ -78,7 +78,7 @@ runs:
         branch: ${{ inputs.preview-branch }}
         folder: ${{ inputs.source-dir }}
         target-folder: ${{ env.targetdir }}
-        commit-message: Deploy preview for ${{ github.sha }} on PR ${{ env.pr }}
+        commit-message: Deploy preview for PR ${{ env.pr }} 🛫
 
     - name: Leave a comment after deployment
       if: env.action == 'deploy'
@@ -95,8 +95,10 @@ runs:
           :rocket: Deployed preview to
           https://${{ env.pagesurl }}/${{ env.targetdir }}
 
-          commit ${{ github.sha }}
-          @ ${{ env.datetime }}
+          on branch [`${{ inputs.preview-branch }}`](\
+          ${{ github.server_url }}/${{ github.repository }}\
+          /tree/${{ inputs.preview-branch }})
+          at ${{ env.datetime }}
           "
 
     - name: Remove preview directory
@@ -106,7 +108,7 @@ runs:
         branch: ${{ inputs.preview-branch }}
         folder: ${{ env.emptydir }}
         target-folder: ${{ env.targetdir }}
-        commit-message: Remove preview for ${{ github.sha }} on PR ${{ env.pr }}
+        commit-message: Remove preview for PR ${{ env.pr }} 🛬
 
     - name: Leave a comment after removal
       if: env.action == 'remove'
