@@ -79,6 +79,7 @@ runs:
         folder: ${{ inputs.source-dir }}
         target-folder: ${{ env.targetdir }}
         commit-message: Deploy preview for PR ${{ env.pr }} 🛫
+        force: false
 
     - name: Leave a comment after deployment
       if: env.action == 'deploy' && env.deployment_status == 'success'
@@ -109,6 +110,7 @@ runs:
         folder: ${{ env.emptydir }}
         target-folder: ${{ env.targetdir }}
         commit-message: Remove preview for PR ${{ env.pr }} 🛬
+        force: false
 
     - name: Leave a comment after removal
       if: env.action == 'remove' && env.deployment_status == 'success'
