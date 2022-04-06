@@ -1,12 +1,15 @@
 #!/usr/bin/env bash
 
-if [[ $GITHUB_EVENT_NAME != "pull_request" ]]; then
-  echo "unknown event $GITHUB_EVENT_NAME; no action to take"
-  echo "action=none" >> "$GITHUB_ENV"
-  exit 0
-fi
-
-echo "event is pull_request"
+case $GITHUB_EVENT_NAME in
+  "pull_request" | "pull_request_target")
+    echo "event_type is $GITHUB_EVENT_NAME; proceeding"
+    ;;
+  *)
+    echo "unknown event $GITHUB_EVENT_NAME; no action to take"
+    echo "action=none" >> "$GITHUB_ENV"
+    exit 0
+    ;;
+esac
 
 event_type=$(jq -r ".action" "$GITHUB_EVENT_PATH")
 echo "event_type is $event_type"
@@ -19,7 +22,7 @@ case $event_type in
     echo "action=remove" >> "$GITHUB_ENV"
     ;;
   *)
-    echo "unknown event type; no action to take"
+    echo "unknown event type $event_type; no action to take"
     echo "action=none" >> "$GITHUB_ENV"
     ;;
 esac
