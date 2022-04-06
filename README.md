@@ -15,15 +15,15 @@ Features:
   request is closed
 - Can be configured to override any of these behaviours
 
+Preview URLs look like this:
+`https://[owner].github.io/[repo]/pr-preview/pr-[number]/`
+
 <p align="center">
   <img src="https://github.com/rossjrw/pr-preview-action/blob/main/.github/sample-preview-link.png" alt="Sample comment left by the action">
 </p>
 <p align="center">
   Pictured: https://github.com/rossjrw/pr-preview-action/pull/1
 </p>
-
-Preview URLs look like this:
-`https://[owner].github.io/[repo]/pr-preview/pr-[number]/`
 
 ## Usage
 
@@ -70,9 +70,15 @@ jobs:
           source-dir: ./build/
 ```
 
+### Important things to be aware of
+
+#### Run only when files are changed
+
 Consider limiting this workflow to run [only when relevant files are
 edited](https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#onpushpull_requestpull_request_targetpathspaths-ignore)
 to avoid deploying previews unnecessarily.
+
+#### Run on all appropriate pull request events
 
 Be sure to [pick the right event
 types](https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#pull_request)
@@ -81,38 +87,77 @@ for the `pull_request` event. It only comes with `opened`, `reopened`, and
 the preview should be removed during the `closed` event, which it only sees
 if you explicitly add it to the workflow.
 
+#### Set a concurrency group
+
 I highly recommend [setting a concurrency
 group](https://docs.github.com/en/actions/using-jobs/using-concurrency)
 scoped to each PR using `github.ref` as above, which should prevent the
 preview and comment from desynchronising if you are e.g. committing very
 frequently.
 
-### Don't delete your previews when deploying a new release!
+#### Ensure your main deployment is compatible
 
-**Important:** If your root directory on the GitHub Pages deployment branch
-(or `docs/` on the main branch) is generated automatically (e.g. on pushes
-to the main branch, with a tool such as Webpack), you will need to configure
-it not to remove the umbrella directory (`pr-preview/` by default, see
-configuration below).
+If you are using GitHub Actions to deploy your GitHub Pages sites
+(typically on push to the main branch), there are some actions you should
+take to avoid the PR preview overwriting the main deployment, or
+vice-versa.
 
-For example, if you are using
-[JamesIves/github-pages-deploy-action](https://github.com/JamesIves/github-pages-deploy-action)
-to deploy your build, you can implement this using its `clean-exclude`
-parameter:
+1. **Prevent your main deployment from deleting previews**
 
-```yml
-# .github/workflows/build-deploy-pages-site.yml
-steps:
-  ...
-  - uses: JamesIves/github-pages-deploy-action@v4
-    ...
-    with:
-      clean-exclude: pr-preview/
-      ...
-```
+   If your root directory on the GitHub Pages deployment branch (or `docs/`
+   on the main branch) is generated automatically (e.g. on pushes to the
+   main branch, with a tool such as Webpack), you will need to configure it
+   not to remove the umbrella directory (`pr-preview/` by default, see
+   configuration below).
 
-If you don't do this, your main deployment may delete all of your
-currently-existing PR previews.
+   For example, if you are using
+   [JamesIves/github-pages-deploy-action](https://github.com/JamesIves/github-pages-deploy-action)
+   to deploy your build, you can implement this using its `clean-exclude`
+   parameter:
+
+   ```yml
+   # .github/workflows/build-deploy-pages-site.yml
+   steps:
+     ...
+     - uses: JamesIves/github-pages-deploy-action@v4
+       ...
+       with:
+         clean-exclude: pr-preview/
+         ...
+   ```
+
+   If you don't do this, your main deployment may delete all of your
+   currently-existing PR previews.
+
+2. **Don't force-push your main deployment**
+
+   Force-pushing your main deployment will cause it to overwrite any and
+   all files in the deployment location. This will destroy any ongoing
+   preview deployments. Instead, consider adjusting your deployment
+   workflow to rebase or merge your main deployment onto the deployment
+   branch such that it respects other ongoing deployments.
+
+   For example, if you are using
+   [JamesIves/github-pages-deploy-action](https://github.com/JamesIves/github-pages-deploy-action)
+   to deploy your build, be aware that at the time of writing (v4.3.0) it
+   force-pushes new deployments by default. You can disable this by setting
+   its `force` parameter to `false`, which will prompt it to rebase new
+   deployments instead of force-pushing them:
+
+   ```yml
+   # .github/workflows/build-deploy-pages-site.yml
+   steps:
+     ...
+     - uses: JamesIves/github-pages-deploy-action@v4
+       ...
+       with:
+         force: false
+         ...
+   ```
+
+   This feature was introduced in v4.3.0 of the above Action.
+
+####
 
 ## Configuration
 
@@ -185,7 +230,7 @@ on:
       - closed
 jobs:
   deploy-preview:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - run: npm i && npm run build
@@ -195,6 +240,28 @@ jobs:
           preview-branch: gh-pages
           umbrella-dir: pr-preview
           action: auto
+```
+
+...and an accompanying main deployment workflow:
+
+```yml
+# .github/workflows/deploy.yml
+name: Deploy PR previews
+on:
+  push:
+    branches:
+      - main
+jobs:
+  deploy-preview:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - run: npm i && npm run build
+      - uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: .
+          branch: gh-pages
+          clean-exclude: pr-preview
 ```
 
 ### Deployment from `docs/`
@@ -212,6 +279,9 @@ steps:
       preview-branch: main
       umbrella-dir: docs/pr-preview
 ```
+
+You should definitely limit this workflow to run only on changes to
+directories other than `docs/`, otherwise this workflow will call itself recursively.
 
 ### Only remove previews for unmerged PRs
 
