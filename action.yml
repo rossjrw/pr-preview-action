@@ -99,7 +99,7 @@ runs:
 
           :---:
 
-          :rocket: Deployed preview to
+          🛫 Deployed preview to
           https://${{ env.pagesurl }}/${{ env.targetdir }}/
 
           on branch [`${{ inputs.preview-branch }}`](\
@@ -130,7 +130,7 @@ runs:
 
           :---:
 
-          Preview removed because the pull request was closed.
+          🛬 Preview removed because the pull request was closed.
 
           ${{ env.datetime }}
           "
