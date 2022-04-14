@@ -24,26 +24,22 @@ inputs:
   action:
     description: >
       Determines what this action will do when it is executed. Supported
-      values: `deploy`, `remove`, `auto` (default).
+      values: `deploy`, `remove`.
 
       If set to `deploy`, will attempt to deploy the preview and overwrite
       any existing preview in that location.
 
       If set to `remove`, will attempt to remove the preview in that
       location.
+    required: true
 
-      If set to `auto`, the action will try to determine whether to deploy
-      or remove the preview. It will deploy the preview on
-      `pull_request.types.synchronize` and `.opened` events, and remove it
-      on `pull_request.types.closed` events. It will not do anything for
-      all other events. `auto` is the default value.
     required: false
     default: auto
 
 runs:
   using: composite
   steps:
-    - name: Store environment variables
+    - name: Store environment variables and validate inputs
       env:
         action: ${{ inputs.action }}
         umbrella: ${{ inputs.umbrella-dir }}
@@ -51,13 +47,17 @@ runs:
         actionref: ${{ github.action_ref }}
         actionrepo: ${{ github.action_repository }}
       run: |
+        case "$action" in
+          "deploy" | "remove") ;;
+          *) echo "Unknown action $action" >&2 && exit 1 ;;
+        esac
         echo "action=$action" >> $GITHUB_ENV
+
         echo "targetdir=$umbrella/pr-$pr" >> $GITHUB_ENV
         echo "pr=$pr" >> $GITHUB_ENV
 
         pagesurl=$(echo $GITHUB_REPOSITORY | sed 's/\//.github.io\//')
         echo "pagesurl=$pagesurl" >> $GITHUB_ENV
-
 
         echo "emptydir=$(mktemp -d)" >> $GITHUB_ENV
         echo "datetime=$(date '+%Y-%m-%d %H:%M %Z')" >> $GITHUB_ENV
@@ -70,11 +70,6 @@ runs:
       run: >-
         ${{ github.action_path }}/lib/find-current-git-tag.sh
         -p $actionrepo -f $actionref
-      shell: bash
-
-    - name: Determine auto action
-      if: env.action == 'auto'
-      run: ${{ github.action_path }}/lib/determine-auto-action.sh
       shell: bash
 
     - name: Deploy preview directory
