@@ -9,6 +9,7 @@ branding:
   color: yellow
 
 inputs:
+  # Main parameters
   preview-branch:
     description: Branch on which the previews will be deployed.
     required: false
@@ -37,8 +38,15 @@ inputs:
       location.
     required: true
 
+  # Parameters for simulating a pull request
+  pr-number:
+    description: >
+      The number of the PR to comment on when updating the preview
+      deployment. If the initiating event is `pull_request` or
+      `pull_request_target`, defaults to the number of the initiating PR.
+      Required otherwise.
     required: false
-    default: auto
+    default: ${{ github.event.number }}
 
 runs:
   using: composite
@@ -47,8 +55,8 @@ runs:
       env:
         action: ${{ inputs.action }}
         umbrella: ${{ inputs.umbrella-dir }}
-        pr: ${{ github.event.number }}
         source_dir: ${{ inputs.source-dir }}
+        pr: ${{ inputs.pr-number }}
         actionref: ${{ github.action_ref }}
         actionrepo: ${{ github.action_repository }}
       run: |
