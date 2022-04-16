@@ -18,9 +18,13 @@ inputs:
     required: false
     default: pr-preview
   source-dir:
-    description: Directory containing files to deploy.
+    description: >
+      Directory containing files to deploy.
+
+      Required when deploying a preview; will raise a warning if specified
+      when removing a preview.
     required: false
-    default: .
+    default: ""
   action:
     description: >
       Determines what this action will do when it is executed. Supported
@@ -44,26 +48,42 @@ runs:
         action: ${{ inputs.action }}
         umbrella: ${{ inputs.umbrella-dir }}
         pr: ${{ github.event.number }}
+        source_dir: ${{ inputs.source-dir }}
         actionref: ${{ github.action_ref }}
         actionrepo: ${{ github.action_repository }}
       run: |
-        case "$action" in
-          "deploy" | "remove") ;;
-          *) echo "Unknown action $action" >&2 && exit 1 ;;
-        esac
-        echo "action=$action" >> $GITHUB_ENV
+        if [ "$action" != "deploy" ] && [ "$action" != "remove "]; then
+          echo "::error::Unknown action $action" >&2
+          exit 1
+        fi
 
-        echo "targetdir=$umbrella/pr-$pr" >> $GITHUB_ENV
-        echo "pr=$pr" >> $GITHUB_ENV
+        if [ "$action" = "deploy" ] && [ -z "$source_dir" ]; then
+          echo "::error::Source dir must be defined when deploying" >&2
+          exit 1
+        fi
+
+        if [ "$action" = "remove" ] && [ -n "$source_dir" ]; then
+          echo "::warning::Source dir should not be defined when removing" >&2
+        fi
+
+        if [ -z "$pr" ]; then
+          echo "::error::PR number required for non-pull_request event" >&2
+          exit 1
+        fi
+
+        echo "action=$action" >> "$GITHUB_ENV"
+
+        echo "targetdir=$umbrella/pr-$pr" >> "$GITHUB_ENV"
+        echo "pr=$pr" >> "$GITHUB_ENV"
 
         pagesurl=$(echo $GITHUB_REPOSITORY | sed 's/\//.github.io\//')
-        echo "pagesurl=$pagesurl" >> $GITHUB_ENV
+        echo "pagesurl=$pagesurl" >> "$GITHUB_ENV"
 
-        echo "emptydir=$(mktemp -d)" >> $GITHUB_ENV
-        echo "datetime=$(date '+%Y-%m-%d %H:%M %Z')" >> $GITHUB_ENV
+        echo "emptydir=$(mktemp -d)" >> "$GITHUB_ENV"
+        echo "datetime=$(date '+%Y-%m-%d %H:%M %Z')" >> "$GITHUB_ENV"
 
-        echo "actionref=$actionref" >> $GITHUB_ENV
-        echo "actionrepo=$actionrepo" >> $GITHUB_ENV
+        echo "actionref=$actionref" >> "$GITHUB_ENV"
+        echo "actionrepo=$actionrepo" >> "$GITHUB_ENV"
       shell: bash
 
     - name: Determine action version
