@@ -60,7 +60,7 @@ runs:
         actionref: ${{ github.action_ref }}
         actionrepo: ${{ github.action_repository }}
       run: |
-        if [ "$action" != "deploy" ] && [ "$action" != "remove "]; then
+        if [ "$action" != "deploy" ] && [ "$action" != "remove" ]; then
           echo "::error::Unknown action $action" >&2
           exit 1
         fi
