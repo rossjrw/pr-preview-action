@@ -60,6 +60,11 @@ runs:
         actionref: ${{ github.action_ref }}
         actionrepo: ${{ github.action_repository }}
       run: |
+        if [ -z "$action" ]; then
+          echo "::error::Action input is required (deploy/remove)" >&2
+          exit 1
+        fi
+
         if [ "$action" != "deploy" ] && [ "$action" != "remove" ]; then
           echo "::error::Unknown action $action" >&2
           exit 1
