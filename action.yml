@@ -100,9 +100,12 @@ runs:
       shell: bash
 
     - name: Determine action version
-      run: >-
-        ${{ github.action_path }}/lib/find-current-git-tag.sh
-        -p $actionrepo -f $actionref
+      run: |
+        version=$(
+          "${{ github.action_path }}/lib/find-current-git-tag.sh" \
+          -p $actionrepo -f $actionref
+        )
+        echo "action_version=$version" >> "$GITHUB_ENV"
       shell: bash
 
     - name: Deploy preview directory
