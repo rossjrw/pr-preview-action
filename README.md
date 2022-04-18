@@ -25,6 +25,10 @@ Preview URLs look like this:
   Pictured: https://github.com/rossjrw/pr-preview-action/pull/1
 </p>
 
+This Action does not currently support deploying previews for PRs from forks,
+but will do so in [the upcoming
+v2](https://github.com/rossjrw/pr-preview-action/pull/6).
+
 ## Usage
 
 A [GitHub Actions
