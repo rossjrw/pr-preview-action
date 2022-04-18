@@ -120,6 +120,7 @@ runs:
       uses: marocchino/sticky-pull-request-comment@v2
       with:
         header: pr-preview
+        number: ${{ env.pr }}
         message: "\
           [PR Preview Action]\
           (${{ github.server_url }}/${{ env.actionrepo }})
@@ -151,6 +152,7 @@ runs:
       uses: marocchino/sticky-pull-request-comment@v2
       with:
         header: pr-preview
+        number: ${{ env.pr }}
         message: "\
           [PR Preview Action]\
           (${{ github.server_url }}/${{ env.actionrepo }})
