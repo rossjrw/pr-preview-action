@@ -1,0 +1,29 @@
+title: PR Preview Action
+tagline: A GitHub Action for previewing pull requests
+description: >-
+  Documentation for PR Preview Action, a GitHub Action that deploys pull
+  request previews to GitHub Pages (and removes them after merge).
+baseurl: ""
+url: https://rossjrw.com/
+
+permalink: pretty
+
+author:
+  url: https://rossjrw.com/
+
+theme: just-the-docs
+
+aux_links:
+  GitHub:
+    - "https://github.com/rossjrw/pr-preview-action"
+
+gh_edit_link: true
+gh_edit_link_text: Edit this page on GitHub
+gh_edit_repository: https://github.com/rossjrw/pr-preview-action
+gh_edit_branch: main
+gh_edit_source: docs
+
+ga_tracking: G-19V908BQMY
+
+plugins:
+  - jekyll-seo-tag
