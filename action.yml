@@ -55,9 +55,16 @@ runs:
         echo "targetdir=$umbrella/pr-$pr" >> $GITHUB_ENV
         echo "pr=$pr" >> $GITHUB_ENV
 
-        pagesurl=$(echo $GITHUB_REPOSITORY | sed 's/\//.github.io\//')
-        echo "pagesurl=$pagesurl" >> $GITHUB_ENV
+        org=$(echo "$GITHUB_REPOSITORY" | cut -d "/" -f 1)
+        thirdleveldomain=$(echo "$GITHUB_REPOSITORY" | cut -d "/" -f 2 | cut -d "." -f 1)
 
+        if [ "$org" == "$thirdleveldomain" ]; then
+          pagesurl="${org}.github.io"
+        else
+          pagesurl=$(echo "$GITHUB_REPOSITORY" | sed 's/\//.github.io\//')
+        fi
+
+        echo "pagesurl=$pagesurl" >> $GITHUB_ENV
 
         echo "emptydir=$(mktemp -d)" >> $GITHUB_ENV
         echo "datetime=$(date '+%Y-%m-%d %H:%M %Z')" >> $GITHUB_ENV
