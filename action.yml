@@ -50,7 +50,7 @@ runs:
         pr: ${{ github.event.number }}
         actionref: ${{ github.action_ref }}
         actionrepo: ${{ github.action_repository }}
-        worktree: pr-preview-action-temp-cleanup-folder
+        worktree: ../pr-preview-action-temp-cleanup-folder
       run: |
         echo "action=$action" >> $GITHUB_ENV
         echo "targetdir=$umbrella/pr-$pr" >> $GITHUB_ENV
@@ -113,7 +113,7 @@ runs:
 
     - name: Setup temp worktree
       if: env.action == 'remove'
-      run: git worktree add ../$worktree 
+      run: git worktree add $worktree 
       shell: bash
 
     - name: Remove preview directory
@@ -127,7 +127,7 @@ runs:
 
     - name: Remove temp worktree
       if: env.action == 'remove'
-      run: git worktree remove ../$worktree
+      run: git worktree remove $worktree
       shell: bash
 
     - name: Leave a comment after removal
