@@ -113,7 +113,7 @@ runs:
 
     - name: Setup temp worktree
       if: env.action == 'remove'
-      run: git worktree add $worktree 
+      run: git worktree add $worktree ${{ inputs.preview-branch }}
       shell: bash
 
     - name: Remove preview directory
@@ -127,7 +127,7 @@ runs:
 
     - name: Remove temp worktree
       if: env.action == 'remove'
-      run: git worktree remove $worktree
+      run: git worktree remove $worktree 
       shell: bash
 
     - name: Leave a comment after removal
