@@ -40,6 +40,11 @@ inputs:
     required: false
     default: auto
 
+outputs:
+  deployment-url:
+    description: The URL at which the preview has been deployed
+    value: ${{ steps.url.outputs.url }}
+
 runs:
   using: composite
   steps:
@@ -86,6 +91,11 @@ runs:
         target-folder: ${{ env.targetdir }}
         commit-message: Deploy preview for PR ${{ env.pr }} 🛫
         force: false
+
+    - name: Expose deployment URL
+      id: url
+      run: echo "::set-output name=url::https://${{ env.pagesurl }}/${{ env.targetdir }}/"
+      shell: bash
 
     - name: Leave a comment after deployment
       if: env.action == 'deploy' && env.deployment_status == 'success'
