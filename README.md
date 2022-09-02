@@ -215,6 +215,10 @@ the `with` parameter.
 
   Default value: `auto`
 
+## Outputs
+
+- `deployment-url`: the URL at which the preview has been deployed.
+
 ## Examples
 
 ### Full example
