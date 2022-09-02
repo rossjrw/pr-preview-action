@@ -113,7 +113,9 @@ runs:
 
     - name: Setup temp worktree
       if: env.action == 'remove'
-      run: git worktree add $worktree ${{ inputs.preview-branch }}
+      run: |
+        git fetch --no-recurse-submodules --depth=1 origin ${{ inputs.preview-branch }}
+        git worktree add $worktree ${{ inputs.preview-branch }}
       shell: bash
 
     - name: Remove preview directory
