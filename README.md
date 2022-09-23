@@ -74,6 +74,13 @@ jobs:
           source-dir: ./build/
 ```
 
+### Pages settings
+
+Set the source for the deployment under **Settings** > **Pages** of your repository to **Deploy from branch**.
+
+![Screenshot from 2022-09-23 17-01-43](https://user-images.githubusercontent.com/105358/191992235-b0cdbf04-3c58-4eea-8f97-226edd10543f.png)
+
+
 ### Important things to be aware of
 
 #### Run only when files are changed
