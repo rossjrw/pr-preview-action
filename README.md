@@ -38,6 +38,20 @@ required to use this Action.
 All the workflow needs to do first is checkout the repository and build the
 Pages site.
 
+First, ensure that your repository is configured to have its GitHub Pages
+site deployed from a branch, by setting the source for the deployment under
+**Settings** > **Pages** of your repository to **Deploy from branch**:
+
+<p align="center">
+  <img src="https://github.com/rossjrw/pr-preview-action/blob/main/.github/deployment-settings.png" alt="GitHub Pages settings">
+</p>
+<p align="center">
+  Pictured: Repository Pages settings at /settings/page
+</p>
+
+The `gh-pages` branch is used for GitHub Pages deployments by convention,
+and will be used in examples here as well.
+
 If your GitHub pages site is deployed from the `gh-pages` branch, built
 with e.g. an `npm` script to the `./build/` dir, and you're happy with the
 default settings, usage is very simple:
