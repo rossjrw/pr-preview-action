@@ -91,9 +91,12 @@ for the `pull_request` event. It only comes with `opened`, `reopened`, and
 the preview should be removed during the `closed` event, which it only sees
 if you explicitly add it to the workflow.
 
-#### Activate Actions permission to read and write
+#### Grant Actions permission to read and write to the repository
 
-This must be changed in the Repo at Settings -> Actions -> General -> Workflow permissions -> Activate "Read and write permissions"
+This must be changed in the repository settings by selecting "Read and
+write permissions" at **Settings** > **Actions** > **General** >
+**Workflow permissions**. Otherwise, the Action won't be able to make any
+changes to your deployment branch.
 
 #### Set a concurrency group
 
