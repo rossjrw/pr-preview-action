@@ -9,6 +9,7 @@ branding:
   color: yellow
 
 inputs:
+  # Main parameters
   preview-branch:
     description: Branch on which the previews will be deployed.
     required: false
@@ -18,27 +19,34 @@ inputs:
     required: false
     default: pr-preview
   source-dir:
-    description: Directory containing files to deploy.
+    description: >
+      Directory containing files to deploy.
+
+      Required when deploying a preview; will raise a warning if specified
+      when removing a preview.
     required: false
-    default: .
+    default: ""
   action:
     description: >
       Determines what this action will do when it is executed. Supported
-      values: `deploy`, `remove`, `auto` (default).
+      values: `deploy`, `remove`.
 
       If set to `deploy`, will attempt to deploy the preview and overwrite
       any existing preview in that location.
 
       If set to `remove`, will attempt to remove the preview in that
       location.
+    required: true
 
-      If set to `auto`, the action will try to determine whether to deploy
-      or remove the preview. It will deploy the preview on
-      `pull_request.types.synchronize` and `.opened` events, and remove it
-      on `pull_request.types.closed` events. It will not do anything for
-      all other events. `auto` is the default value.
+  # Parameters for simulating a pull request
+  pr-number:
+    description: >
+      The number of the PR to comment on when updating the preview
+      deployment. If the initiating event is `pull_request` or
+      `pull_request_target`, defaults to the number of the initiating PR.
+      Required otherwise.
     required: false
-    default: auto
+    default: ${{ github.event.number }}
 
 outputs:
   deployment-url:
@@ -48,38 +56,61 @@ outputs:
 runs:
   using: composite
   steps:
-    - name: Store environment variables
+    - name: Store environment variables and validate inputs
       env:
         action: ${{ inputs.action }}
         umbrella: ${{ inputs.umbrella-dir }}
-        pr: ${{ github.event.number }}
+        source_dir: ${{ inputs.source-dir }}
+        pr: ${{ inputs.pr-number }}
         actionref: ${{ github.action_ref }}
         actionrepo: ${{ github.action_repository }}
       run: |
-        echo "action=$action" >> $GITHUB_ENV
-        echo "targetdir=$umbrella/pr-$pr" >> $GITHUB_ENV
-        echo "pr=$pr" >> $GITHUB_ENV
+        if [ -z "$action" ]; then
+          echo "::error::Action input is required (deploy/remove)" >&2
+          exit 1
+        fi
+
+        if [ "$action" != "deploy" ] && [ "$action" != "remove" ]; then
+          echo "::error::Unknown action $action" >&2
+          exit 1
+        fi
+
+        if [ "$action" = "deploy" ] && [ -z "$source_dir" ]; then
+          echo "::error::Source dir must be defined when deploying" >&2
+          exit 1
+        fi
+
+        if [ "$action" = "remove" ] && [ -n "$source_dir" ]; then
+          echo "::warning::Source dir should not be defined when removing" >&2
+        fi
+
+        if [ -z "$pr" ]; then
+          echo "::error::PR number required for non-pull_request event" >&2
+          exit 1
+        fi
+
+        echo "action=$action" >> "$GITHUB_ENV"
+
+        echo "targetdir=$umbrella/pr-$pr" >> "$GITHUB_ENV"
+        echo "pr=$pr" >> "$GITHUB_ENV"
 
         pagesurl=$(echo $GITHUB_REPOSITORY | sed 's/\//.github.io\//')
-        echo "pagesurl=$pagesurl" >> $GITHUB_ENV
+        echo "pagesurl=$pagesurl" >> "$GITHUB_ENV"
 
+        echo "emptydir=$(mktemp -d)" >> "$GITHUB_ENV"
+        echo "datetime=$(date '+%Y-%m-%d %H:%M %Z')" >> "$GITHUB_ENV"
 
-        echo "emptydir=$(mktemp -d)" >> $GITHUB_ENV
-        echo "datetime=$(date '+%Y-%m-%d %H:%M %Z')" >> $GITHUB_ENV
-
-        echo "actionref=$actionref" >> $GITHUB_ENV
-        echo "actionrepo=$actionrepo" >> $GITHUB_ENV
+        echo "actionref=$actionref" >> "$GITHUB_ENV"
+        echo "actionrepo=$actionrepo" >> "$GITHUB_ENV"
       shell: bash
 
     - name: Determine action version
-      run: >-
-        ${{ github.action_path }}/lib/find-current-git-tag.sh
-        -p $actionrepo -f $actionref
-      shell: bash
-
-    - name: Determine auto action
-      if: env.action == 'auto'
-      run: ${{ github.action_path }}/lib/determine-auto-action.sh
+      run: |
+        version=$(
+          "${{ github.action_path }}/lib/find-current-git-tag.sh" \
+          -p $actionrepo -f $actionref
+        )
+        echo "action_version=$version" >> "$GITHUB_ENV"
       shell: bash
 
     - name: Deploy preview directory
@@ -102,6 +133,7 @@ runs:
       uses: marocchino/sticky-pull-request-comment@v2
       with:
         header: pr-preview
+        number: ${{ env.pr }}
         message: "\
           [PR Preview Action]\
           (${{ github.server_url }}/${{ env.actionrepo }})
@@ -109,7 +141,7 @@ runs:
 
           :---:
 
-          :rocket: Deployed preview to
+          🛫 Deployed preview to
           https://${{ env.pagesurl }}/${{ env.targetdir }}/
 
           on branch [`${{ inputs.preview-branch }}`](\
@@ -133,6 +165,7 @@ runs:
       uses: marocchino/sticky-pull-request-comment@v2
       with:
         header: pr-preview
+        number: ${{ env.pr }}
         message: "\
           [PR Preview Action]\
           (${{ github.server_url }}/${{ env.actionrepo }})
@@ -140,7 +173,7 @@ runs:
 
           :---:
 
-          Preview removed because the pull request was closed.
+          🛬 Preview removed because the pull request was closed.
 
           ${{ env.datetime }}
           "
