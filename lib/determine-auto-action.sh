@@ -15,7 +15,7 @@ event_type=$(jq -r ".action" "$GITHUB_EVENT_PATH")
 echo "event_type is $event_type"
 
 case $event_type in
-  "opened" | "reopened" | "synchronize")
+  "labeled" | "synchronize")
     echo "action=deploy" >> "$GITHUB_ENV"
     ;;
   "closed")
