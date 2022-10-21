@@ -53,6 +53,11 @@ outputs:
     description: The URL at which the preview has been deployed
     value: ${{ steps.url.outputs.url }}
 
+outputs:
+  deployment-url:
+    description: The URL at which the preview has been deployed
+    value: ${{ steps.url.outputs.url }}
+
 runs:
   using: composite
   steps:
