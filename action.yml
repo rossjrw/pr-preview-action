@@ -96,7 +96,8 @@ runs:
 
     - name: Expose deployment URL
       id: url
-      run: echo "::set-output name=url::${{ env.pagesurl }}"
+      run: |
+        echo "::set-output name=url::${{ env.pagesurl }}/${{ env.targetdir }}"
       shell: bash
 
     - name: Leave a comment after deployment
@@ -117,7 +118,7 @@ runs:
           at ${{ env.datetime }}
 
           :rocket: Your preview will be available at
-          ${{ env.pagesurl }}
+          ${{ env.pagesurl }}/${{ env.targetdir }}
 
           (once GitHub [finishes deploying it]\
           (${{ github.server_url }}/${{ github.repository }}\
