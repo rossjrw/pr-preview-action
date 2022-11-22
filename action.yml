@@ -68,10 +68,10 @@ runs:
         org=$(echo "$GITHUB_REPOSITORY" | cut -d "/" -f 1)
         thirdleveldomain=$(echo "$GITHUB_REPOSITORY" | cut -d "/" -f 2 | cut -d "." -f 1)
 
-        if [ "$org" == "$thirdleveldomain" ]; then
-          pagesurl="${org}.github.io"
-        elif [ -z "$customurl" ]; then
+        if [ -z "$customurl" ]; then
           pagesurl="$customurl"
+        elif [ "$org" == "$thirdleveldomain" ]; then
+          pagesurl="${org}.github.io"
         else
           pagesurl=$(echo "$GITHUB_REPOSITORY" | sed 's/\//.github.io\//')
         fi
