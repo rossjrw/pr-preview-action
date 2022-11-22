@@ -48,6 +48,9 @@ outputs:
 runs:
   using: composite
   steps:
+    - name: Get GitHub Pages url
+      id: pages
+      uses: actions/configure-pages@v2
     - name: Store environment variables
       env:
         action: ${{ inputs.action }}
@@ -55,19 +58,11 @@ runs:
         pr: ${{ github.event.number }}
         actionref: ${{ github.action_ref }}
         actionrepo: ${{ github.action_repository }}
+        pagesurl: ${{ steps.pages.outputs.base_url }}
       run: |
         echo "action=$action" >> $GITHUB_ENV
         echo "targetdir=$umbrella/pr-$pr" >> $GITHUB_ENV
         echo "pr=$pr" >> $GITHUB_ENV
-
-        org=$(echo "$GITHUB_REPOSITORY" | cut -d "/" -f 1)
-        thirdleveldomain=$(echo "$GITHUB_REPOSITORY" | cut -d "/" -f 2 | cut -d "." -f 1)
-
-        if [ "$org" == "$thirdleveldomain" ]; then
-          pagesurl="${org}.github.io"
-        else
-          pagesurl=$(echo "$GITHUB_REPOSITORY" | sed 's/\//.github.io\//')
-        fi
 
         echo "pagesurl=$pagesurl" >> $GITHUB_ENV
 
@@ -101,7 +96,7 @@ runs:
 
     - name: Expose deployment URL
       id: url
-      run: echo "::set-output name=url::https://${{ env.pagesurl }}/${{ env.targetdir }}/"
+      run: echo "::set-output name=url::${{ env.pagesurl }}"
       shell: bash
 
     - name: Leave a comment after deployment
@@ -116,13 +111,17 @@ runs:
 
           :---:
 
-          :rocket: Deployed preview to
-          https://${{ env.pagesurl }}/${{ env.targetdir }}/
-
-          on branch [`${{ inputs.preview-branch }}`](\
+          Built preview to branch [`${{ inputs.preview-branch }}`](\
           ${{ github.server_url }}/${{ github.repository }}\
           /tree/${{ inputs.preview-branch }})
           at ${{ env.datetime }}
+
+          :rocket: Your preview will be available at
+          ${{ env.pagesurl }}
+
+          (once GitHub [finishes deploying it]\
+          (${{ github.server_url }}/${{ github.repository }}\
+          /actions/workflows/pages/pages-build-deployment))
           "
 
     - name: Remove preview directory
