@@ -75,7 +75,7 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Install and Build
         run: |
@@ -261,7 +261,7 @@ jobs:
   deploy-preview:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - run: npm i && npm run build
       - uses: rossjrw/pr-preview-action@v1
         with:
@@ -284,7 +284,7 @@ jobs:
   deploy-preview:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - run: npm i && npm run build
       - uses: JamesIves/github-pages-deploy-action@v4
         with:
@@ -353,7 +353,7 @@ jobs:
   deploy-preview:
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - run: npm i && npm run build
       - uses: rossjrw/pr-preview-action@v1
         with:
