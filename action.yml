@@ -55,6 +55,7 @@ runs:
         pr: ${{ github.event.number }}
         actionref: ${{ github.action_ref }}
         actionrepo: ${{ github.action_repository }}
+        worktree: ../pr-preview-action-temp-cleanup-folder
       run: |
         echo "action=$action" >> $GITHUB_ENV
         echo "targetdir=$umbrella/pr-$pr" >> $GITHUB_ENV
@@ -76,6 +77,8 @@ runs:
 
         echo "actionref=$actionref" >> $GITHUB_ENV
         echo "actionrepo=$actionrepo" >> $GITHUB_ENV
+
+        echo "worktree=$worktree" >> $GITHUB_ENV
       shell: bash
 
     - name: Determine action version
@@ -125,18 +128,29 @@ runs:
           at ${{ env.datetime }}
           "
 
+    - name: Setup temp worktree
+      if: env.action == 'remove'
+      run: |
+        git fetch --no-recurse-submodules --depth=1 origin ${{ inputs.preview-branch }}
+        git worktree add $worktree ${{ inputs.preview-branch }}
+      shell: bash
+
     - name: Remove preview directory
       if: env.action == 'remove'
-      uses: JamesIves/github-pages-deploy-action@v4
+      uses: EndBug/add-and-commit@v9
+      id: remove
       with:
-        branch: ${{ inputs.preview-branch }}
-        folder: ${{ env.emptydir }}
-        target-folder: ${{ env.targetdir }}
-        commit-message: Remove preview for PR ${{ env.pr }} 🛬
-        force: false
+        cwd: ${{ env.worktree }}
+        remove: ${{ env.targetdir }} -r
+        message: Remove preview for PR ${{ env.pr }} 🛬
+
+    - name: Remove temp worktree
+      if: env.action == 'remove'
+      run: git worktree remove $worktree 
+      shell: bash
 
     - name: Leave a comment after removal
-      if: env.action == 'remove' && env.deployment_status == 'success'
+      if: env.action == 'remove'
       uses: marocchino/sticky-pull-request-comment@v2
       with:
         header: pr-preview
