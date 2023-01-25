@@ -2,7 +2,7 @@
 
 case $GITHUB_EVENT_NAME in
   "pull_request" | "pull_request_target")
-    echo "event_type is $GITHUB_EVENT_NAME; proceeding"
+    echo "event_name is $GITHUB_EVENT_NAME; proceeding"
     ;;
   *)
     echo "unknown event $GITHUB_EVENT_NAME; no action to take"
