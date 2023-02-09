@@ -219,6 +219,11 @@ the `with` parameter.
 
   Default: `pr-preview`
 
+- `custom-url`: Base URL to use when providing a link to the preview site.
+
+  Default: Will attempt to calculate the repository's GitHub Pages URL
+  (e.g. "rossjrw.github.io").
+
 - **(Advanced)** `action`: Determines what this action will do when it is
   executed. Supported values: `deploy`, `remove`, `none`, `auto`.
 
