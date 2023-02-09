@@ -21,6 +21,10 @@ inputs:
     description: Directory containing files to deploy.
     required: false
     default: .
+  custom-url:
+    description: Custom pages URL
+    required: false
+    default: ""
   action:
     description: >
       Determines what this action will do when it is executed. Supported
@@ -55,6 +59,7 @@ runs:
         pr: ${{ github.event.number }}
         actionref: ${{ github.action_ref }}
         actionrepo: ${{ github.action_repository }}
+        customurl: ${{ inputs.custom-url }}
       run: |
         echo "action=$action" >> $GITHUB_ENV
         echo "targetdir=$umbrella/pr-$pr" >> $GITHUB_ENV
@@ -63,7 +68,9 @@ runs:
         org=$(echo "$GITHUB_REPOSITORY" | cut -d "/" -f 1)
         thirdleveldomain=$(echo "$GITHUB_REPOSITORY" | cut -d "/" -f 2 | cut -d "." -f 1)
 
-        if [ "$org" == "$thirdleveldomain" ]; then
+        if [ ! -z "$customurl" ]; then
+          pagesurl="$customurl"
+        elif [ "$org" == "$thirdleveldomain" ]; then
           pagesurl="${org}.github.io"
         else
           pagesurl=$(echo "$GITHUB_REPOSITORY" | sed 's/\//.github.io\//')
