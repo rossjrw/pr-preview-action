@@ -22,12 +22,12 @@ if [ -z "$github_repository" ] || [ -z "$git_ref" ]; then
 fi
 
 echo "Cloning repository $github_repository at ref $git_ref"
-git clone --bare --single-branch --branch "$git_ref" "https://github.com/$github_repository" bare_pr_preview
+git clone --bare --single-branch --branch "$git_ref" "https://github.com/$github_repository" bare_pr_preview && {
+  action_version=$(git describe --tags --match "v*.*.*" \
+    || git describe --tags \
+    || git rev-parse HEAD)
 
-cd bare_pr_preview || exit 1
-
-action_version=$(git describe --tags --match "v*.*.*" \
-  || git describe --tags \
-  || git rev-parse HEAD)
-
-echo "action_version=$action_version" >> "$GITHUB_ENV"
+  echo "action_version=$action_version" >> "$GITHUB_ENV"
+} || {
+  echo "action_version=$git_ref" >> "$GITHUB_ENV"
+}
