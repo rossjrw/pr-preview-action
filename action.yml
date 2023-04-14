@@ -33,7 +33,7 @@ inputs:
       This should be formatted like so: `rossjrw/pr-preview-action` .
       You'll need to use PAT in the `token` input.
     required: false
-    default: ${{ env.GITHUB_REPOSITORY }}
+    default: ${{ github.repository }}
   custom-url:
     description: Custom pages URL
     required: false
@@ -80,15 +80,15 @@ runs:
         echo "targetdir=$umbrella/pr-$pr" >> $GITHUB_ENV
         echo "pr=$pr" >> $GITHUB_ENV
 
-        org=$(echo "$GITHUB_REPOSITORY" | cut -d "/" -f 1)
-        thirdleveldomain=$(echo "$GITHUB_REPOSITORY" | cut -d "/" -f 2 | cut -d "." -f 1)
+        org=$(echo "$deployrepo" | cut -d "/" -f 1)
+        thirdleveldomain=$(echo "$deployrepo" | cut -d "/" -f 2 | cut -d "." -f 1)
 
         if [ ! -z "$customurl" ]; then
           pagesurl="$customurl"
         elif [ "$org" == "$thirdleveldomain" ]; then
           pagesurl="${org}.github.io"
         else
-          pagesurl=$(echo "$GITHUB_REPOSITORY" | sed 's/\//.github.io\//')
+          pagesurl=$(echo "$deployrepo" | sed 's/\//.github.io\//')
         fi
 
         echo "pagesurl=$pagesurl" >> $GITHUB_ENV
