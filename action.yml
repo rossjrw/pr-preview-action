@@ -9,6 +9,12 @@ branding:
   color: yellow
 
 inputs:
+  token:
+    description: >
+      Default is GITHUB_TOKEN in the repository.
+      If you need more permissions for things such as deploying to another repository, you can add a PAT.
+    required: false
+    default: ${{ github.token }}
   preview-branch:
     description: Branch on which the previews will be deployed.
     required: false
@@ -21,6 +27,13 @@ inputs:
     description: Directory containing files to deploy.
     required: false
     default: .
+  deploy-repository:
+    description: >
+      You can deploy to GitHub Pages in the different repository.
+      This should be formatted like so: `rossjrw/pr-preview-action` .
+      You'll need to use PAT in the `token` input.
+    required: false
+    default: ${{ env.GITHUB_REPOSITORY }}
   custom-url:
     description: Custom pages URL
     required: false
@@ -60,6 +73,8 @@ runs:
         actionref: ${{ github.action_ref }}
         actionrepo: ${{ github.action_repository }}
         customurl: ${{ inputs.custom-url }}
+        deployrepo: ${{ inputs.deploy-repository }}
+        token: ${{ inputs.token }}
       run: |
         echo "action=$action" >> $GITHUB_ENV
         echo "targetdir=$umbrella/pr-$pr" >> $GITHUB_ENV
@@ -83,6 +98,8 @@ runs:
 
         echo "actionref=$actionref" >> $GITHUB_ENV
         echo "actionrepo=$actionrepo" >> $GITHUB_ENV
+        echo "deployrepo=$deployrepo" >> $GITHUB_ENV
+        echo "token=$token" >> $GITHUB_ENV
       shell: bash
 
     - name: Determine action version
@@ -100,6 +117,8 @@ runs:
       if: env.action == 'deploy'
       uses: JamesIves/github-pages-deploy-action@v4
       with:
+        token: ${{ env.token }}
+        repository-name: ${{ env.deployrepo }}
         branch: ${{ inputs.preview-branch }}
         folder: ${{ inputs.source-dir }}
         target-folder: ${{ env.targetdir }}
@@ -136,6 +155,8 @@ runs:
       if: env.action == 'remove'
       uses: JamesIves/github-pages-deploy-action@v4
       with:
+        token: ${{ env.token }}
+        repository-name: ${{ env.deployrepo }}
         branch: ${{ inputs.preview-branch }}
         folder: ${{ env.emptydir }}
         target-folder: ${{ env.targetdir }}
