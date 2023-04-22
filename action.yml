@@ -66,11 +66,11 @@ runs:
         echo "pr=$pr" >> $GITHUB_ENV
 
         org=$(echo "$GITHUB_REPOSITORY" | cut -d "/" -f 1)
-        thirdleveldomain=$(echo "$GITHUB_REPOSITORY" | cut -d "/" -f 2 | cut -d "." -f 1)
+        thirdleveldomain=$(echo "$GITHUB_REPOSITORY" | cut -d "/" -f 2)
 
         if [ ! -z "$customurl" ]; then
           pagesurl="$customurl"
-        elif [ "$org" == "$thirdleveldomain" ]; then
+        elif [ "${org}.github.io" == "$thirdleveldomain" ]; then
           pagesurl="${org}.github.io"
         else
           pagesurl=$(echo "$GITHUB_REPOSITORY" | sed 's/\//.github.io\//')
