@@ -9,6 +9,14 @@ branding:
   color: yellow
 
 inputs:
+  token:
+    description: >
+      The token to use for the deployment.
+      Default is GITHUB_TOKEN in the current repository.
+      If you need more permissions for things such as deploying to another
+      repository, you can add a Personal Access Token (PAT).
+    required: false
+    default: ${{ github.token }}
   preview-branch:
     description: Branch on which the previews will be deployed.
     required: false
@@ -21,6 +29,18 @@ inputs:
     description: Directory containing files to deploy.
     required: false
     default: .
+  deploy-repository:
+    description: >
+      The GitHub repository to deploy the preview to.
+      This should be formatted like `<org name>/<repo name>`, e.g.
+      `rossjrw/pr-preview-action`.
+      Defaults to the current repository.
+
+      You will need to add a Personal Access Token (PAT) in the `token` input
+      in order to allow the action running in one repository to make changes
+      to another repository.
+    required: false
+    default: ${{ github.repository }}
   custom-url:
     description: Custom pages URL
     required: false
@@ -60,20 +80,22 @@ runs:
         actionref: ${{ github.action_ref }}
         actionrepo: ${{ github.action_repository }}
         customurl: ${{ inputs.custom-url }}
+        deployrepo: ${{ inputs.deploy-repository }}
+        token: ${{ inputs.token }}
       run: |
         echo "action=$action" >> $GITHUB_ENV
         echo "targetdir=$umbrella/pr-$pr" >> $GITHUB_ENV
         echo "pr=$pr" >> $GITHUB_ENV
 
-        org=$(echo "$GITHUB_REPOSITORY" | cut -d "/" -f 1)
-        thirdleveldomain=$(echo "$GITHUB_REPOSITORY" | cut -d "/" -f 2)
+        org=$(echo "$deployrepo" | cut -d "/" -f 1)
+        thirdleveldomain=$(echo "$deployrepo" | cut -d "/" -f 2)
 
         if [ ! -z "$customurl" ]; then
           pagesurl="$customurl"
         elif [ "${org}.github.io" == "$thirdleveldomain" ]; then
           pagesurl="${org}.github.io"
         else
-          pagesurl=$(echo "$GITHUB_REPOSITORY" | sed 's/\//.github.io\//')
+          pagesurl=$(echo "$deployrepo" | sed 's/\//.github.io\//')
         fi
 
         echo "pagesurl=$pagesurl" >> $GITHUB_ENV
@@ -83,6 +105,8 @@ runs:
 
         echo "actionref=$actionref" >> $GITHUB_ENV
         echo "actionrepo=$actionrepo" >> $GITHUB_ENV
+        echo "deployrepo=$deployrepo" >> $GITHUB_ENV
+        echo "token=$token" >> $GITHUB_ENV
       shell: bash
 
     - name: Determine action version
@@ -100,6 +124,8 @@ runs:
       if: env.action == 'deploy'
       uses: JamesIves/github-pages-deploy-action@v4
       with:
+        token: ${{ env.token }}
+        repository-name: ${{ env.deployrepo }}
         branch: ${{ inputs.preview-branch }}
         folder: ${{ inputs.source-dir }}
         target-folder: ${{ env.targetdir }}
@@ -136,6 +162,8 @@ runs:
       if: env.action == 'remove'
       uses: JamesIves/github-pages-deploy-action@v4
       with:
+        token: ${{ env.token }}
+        repository-name: ${{ env.deployrepo }}
         branch: ${{ inputs.preview-branch }}
         folder: ${{ env.emptydir }}
         target-folder: ${{ env.targetdir }}
