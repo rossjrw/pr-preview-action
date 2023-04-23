@@ -224,6 +224,22 @@ the `with` parameter.
   Default: Will attempt to calculate the repository's GitHub Pages URL
   (e.g. "rossjrw.github.io").
 
+- `deploy-repository`: The repository to deploy the preview to.
+
+  If this value is changed from the default, the `token` parameter must also
+  be set (see below).
+
+  Default: The current repository that the pull request was made in.
+
+- `token`: The token to use for the preview deployment. The default value is
+  fine for most purposes, but if you want to deploy the preview to a different
+  repository (see `deploy-repository` above), you will need to create a
+  [Personal Access Token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token)
+  with permission to access it.
+
+  Default: GITHUB_TOKEN, which gives the action permission to deploy to the
+  current repository.
+
 - **(Advanced)** `action`: Determines what this action will do when it is
   executed. Supported values: `deploy`, `remove`, `none`, `auto`.
 

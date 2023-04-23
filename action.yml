@@ -11,8 +11,10 @@ branding:
 inputs:
   token:
     description: >
-      Default is GITHUB_TOKEN in the repository.
-      If you need more permissions for things such as deploying to another repository, you can add a PAT.
+      The token to use for the deployment.
+      Default is GITHUB_TOKEN in the current repository.
+      If you need more permissions for things such as deploying to another
+      repository, you can add a Personal Access Token (PAT).
     required: false
     default: ${{ github.token }}
   preview-branch:
@@ -29,9 +31,14 @@ inputs:
     default: .
   deploy-repository:
     description: >
-      You can deploy to GitHub Pages in the different repository.
-      This should be formatted like so: `rossjrw/pr-preview-action` .
-      You'll need to use PAT in the `token` input.
+      The GitHub repository to deploy the preview to.
+      This should be formatted like `<org name>/<repo name>`, e.g.
+      `rossjrw/pr-preview-action`.
+      Defaults to the current repository.
+
+      You will need to add a Personal Access Token (PAT) in the `token` input
+      in order to allow the action running in one repository to make changes
+      to another repository.
     required: false
     default: ${{ github.repository }}
   custom-url:
