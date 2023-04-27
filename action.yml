@@ -111,13 +111,13 @@ runs:
 
     - name: Determine action version
       run: >-
-        ${{ github.action_path }}/lib/find-current-git-tag.sh
+        $GITHUB_ACTION_PATH/lib/find-current-git-tag.sh
         -p $actionrepo -f $actionref
       shell: bash
 
     - name: Determine auto action
       if: env.action == 'auto'
-      run: ${{ github.action_path }}/lib/determine-auto-action.sh
+      run: $GITHUB_ACTION_PATH/lib/determine-auto-action.sh
       shell: bash
 
     - name: Deploy preview directory
