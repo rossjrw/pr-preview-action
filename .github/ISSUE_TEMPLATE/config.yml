@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Start a Discussion
+    url: https://github.com/rossjrw/pr-preview-action/discussions/new?category=q-a
+    about: If you have a question about how to use PR Preview Action, start a new discussion.
