@@ -134,7 +134,7 @@ runs:
 
     - name: Expose deployment URL
       id: url
-      run: echo "::set-output name=url::https://${{ env.pagesurl }}/${{ env.targetdir }}/"
+      run: echo "url=https://${{ env.pagesurl }}/${{ env.targetdir }}/"  >> $GITHUB_OUTPUT
       shell: bash
 
     - name: Leave a comment after deployment
