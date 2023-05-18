@@ -110,9 +110,9 @@ runs:
       shell: bash
 
     - name: Determine action version
-      run: >-
-        $GITHUB_ACTION_PATH/lib/find-current-git-tag.sh
-        -p $actionrepo -f $actionref
+      run: |
+        action_version=$("${{ github.action_path }}/lib/find-current-git-tag.sh" -p $actionrepo -f $actionref)
+        echo "action_version=$action_version" >> "$GITHUB_ENV"
       shell: bash
 
     - name: Determine auto action

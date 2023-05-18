@@ -21,14 +21,14 @@ if [ -z "$github_repository" ] || [ -z "$git_ref" ]; then
   helpFunction
 fi
 
-echo >&2 "Determining preview action version"
+echo >&2 "Determining Git tag for $github_repository/$git_ref"
+
 echo >&2 "Cloning repository $github_repository at ref $git_ref"
-if git clone --bare --single-branch --branch "$git_ref" "https://github.com/$github_repository" bare_pr_preview; then
-  echo >&2 "Finding most specific tag matching tag $git_ref"
-  action_version=$(git describe --tags --match "v*.*.*" || git describe --tags || git rev-parse HEAD)
-  echo >&2 "Found $action_version"
-  echo "action_version=$action_version" >>"$GITHUB_ENV"
-else
-  echo >&2 "Clone failed; using truncated ref as action version"
-  echo "action_version=${git_ref:0:9}" >>"$GITHUB_ENV"
-fi
+git clone --bare --single-branch --branch "$git_ref" "https://github.com/$github_repository" bare_pr_preview
+
+cd bare_pr_preview || exit 1
+
+action_version=$(git describe --tags --match "v*.*.*" || git describe --tags || git rev-parse HEAD)
+
+echo "$action_version"
+exit 0
