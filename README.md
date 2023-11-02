@@ -73,6 +73,10 @@ concurrency: preview-${{ github.ref }}
 jobs:
   deploy-preview:
     runs-on: ubuntu-20.04
+    # Sets permissions of the GITHUB_TOKEN to (only) allow posting a comment with the Preview URL
+    permissions:
+      issues: write
+      pull-requests: write
     steps:
       - name: Checkout
         uses: actions/checkout@v3
