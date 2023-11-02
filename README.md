@@ -78,6 +78,8 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Install and Build
+        # Skipping build if the PR has been closed
+        if: ${{ github.event.action != 'closed' }}
         run: |
           npm install
           npm run build
