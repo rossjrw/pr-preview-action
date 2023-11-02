@@ -237,8 +237,9 @@ the `with` parameter.
   [Personal Access Token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token)
   with permission to access it.
 
-  Default: GITHUB_TOKEN, which gives the action permission to deploy to the
-  current repository.
+  Default: `${{ secrets.GITHUB_TOKEN }}`, which gives the action permission to
+  deploy to the current repository. To customize it, use e.g.
+  `token: ${{ secrets.PREVIEW_TOKEN }}` not just `token: PREVIEW_TOKEN`.
 
 - **(Advanced)** `action`: Determines what this action will do when it is
   executed. Supported values: `deploy`, `remove`, `none`, `auto`.
