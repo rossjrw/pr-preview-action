@@ -153,7 +153,7 @@ runs:
           https://${{ env.pagesurl }}/${{ env.targetdir }}/
 
           on branch [`${{ inputs.preview-branch }}`](\
-          ${{ github.server_url }}/${{ github.repository }}\
+          ${{ github.server_url }}/${{ env.deployrepo }}\
           /tree/${{ inputs.preview-branch }})
           at ${{ env.datetime }}
           "
