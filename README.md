@@ -78,6 +78,7 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Install and Build
+        if: github.event.action != 'closed' # You might want to skip the build if the PR has been closed
         run: |
           npm install
           npm run build
@@ -288,6 +289,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - run: npm i && npm run build
+        if: github.event.action != 'closed'
       - uses: rossjrw/pr-preview-action@v1
         with:
           source-dir: .
