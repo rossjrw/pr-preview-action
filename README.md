@@ -285,6 +285,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - run: npm i && npm run build
+        if: github.event.action != 'closed'
       - uses: rossjrw/pr-preview-action@v1
         with:
           source-dir: .
