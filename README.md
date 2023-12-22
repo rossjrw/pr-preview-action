@@ -78,8 +78,7 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Install and Build
-        # Skipping build if the PR has been closed
-        if: ${{ github.event.action != 'closed' }}
+        if: github.event.action != 'closed' # You might want to skip the build if the PR has been closed
         run: |
           npm install
           npm run build
