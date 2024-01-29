@@ -245,6 +245,20 @@ the `with` parameter.
   Default: `${{ github.token }}`, which gives the action permission to
   deploy to the current repository.
 
+- **(Advanced)** `single-commit`: Keep a single commit on the preview branch instead of maintaining the full history.
+
+  **Caution**: Enabling this will erase any existing history on the preview branch.
+  Only enable this if you don't use GitHub Pages for anything besides PR previews in the target repository.
+
+  If your preview deployments contain several large binary files, your preview branch may grow significantly in size over time.
+  Enabling this will force-push to the branch with a single commit, erasing the history for that branch and reducing the size of your preview branch.
+
+  Equivalent to
+  [JamesIves/github-pages-deploy-action](https://github.com/JamesIves/github-pages-deploy-action)'s
+  'single-commit' setting.
+
+  Default: `false`
+
 - **(Advanced)** `action`: Determines what this action will do when it is
   executed. Supported values: `deploy`, `remove`, `none`, `auto`.
 

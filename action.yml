@@ -45,6 +45,12 @@ inputs:
     description: Custom pages URL
     required: false
     default: ""
+  single-commit:
+    description: >
+      Keep a single commit on the preview branch instead of maintaining the full history.
+      Enabling this will erase any existing history on the preview branch.
+    required: false
+    default: false
   action:
     description: >
       Determines what this action will do when it is executed. Supported
@@ -130,6 +136,7 @@ runs:
         folder: ${{ inputs.source-dir }}
         target-folder: ${{ env.targetdir }}
         commit-message: Deploy preview for PR ${{ env.pr }} 🛫
+        single-commit: ${{ inputs.single-commit }}
         force: false
 
     - name: Expose deployment URL
@@ -168,6 +175,7 @@ runs:
         folder: ${{ env.emptydir }}
         target-folder: ${{ env.targetdir }}
         commit-message: Remove preview for PR ${{ env.pr }} 🛬
+        single-commit: ${{ inputs.single-commit }}
         force: false
 
     - name: Leave a comment after removal
