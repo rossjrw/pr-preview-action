@@ -122,7 +122,7 @@ runs:
 
     - name: Deploy preview directory
       if: env.action == 'deploy'
-      uses: JamesIves/github-pages-deploy-action@65b5dfd4f5bcd3a7403bbc2959c144256167464e
+      uses: JamesIves/github-pages-deploy-action@65b5dfd4f5bcd3a7403bbc2959c144256167464e # v4.5.0
       with:
         token: ${{ env.token }}
         repository-name: ${{ env.deployrepo }}
@@ -139,7 +139,7 @@ runs:
 
     - name: Leave a comment after deployment
       if: env.action == 'deploy' && env.deployment_status == 'success'
-      uses: marocchino/sticky-pull-request-comment@331f8f5b4215f0445d3c07b4967662a32a2d3e31
+      uses: marocchino/sticky-pull-request-comment@331f8f5b4215f0445d3c07b4967662a32a2d3e31 # v2.9.0
       with:
         header: pr-preview
         message: "\
@@ -160,7 +160,7 @@ runs:
 
     - name: Remove preview directory
       if: env.action == 'remove'
-      uses: JamesIves/github-pages-deploy-action@65b5dfd4f5bcd3a7403bbc2959c144256167464e
+      uses: JamesIves/github-pages-deploy-action@65b5dfd4f5bcd3a7403bbc2959c144256167464e # v4.5.0
       with:
         token: ${{ env.token }}
         repository-name: ${{ env.deployrepo }}
@@ -172,7 +172,7 @@ runs:
 
     - name: Leave a comment after removal
       if: env.action == 'remove' && env.deployment_status == 'success'
-      uses: marocchino/sticky-pull-request-comment@331f8f5b4215f0445d3c07b4967662a32a2d3e31
+      uses: marocchino/sticky-pull-request-comment@331f8f5b4215f0445d3c07b4967662a32a2d3e31 # v2.9.0
       with:
         header: pr-preview
         message: "\
