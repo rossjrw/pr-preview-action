@@ -162,7 +162,7 @@ runs:
           :---:
 
           :rocket: Deployed preview to
-          https://${{ env.pagesurl }}/${{ env.targetdir }}/
+          https://${{ env.pagesurl }}/${{ env.pagespath }}/
 
           on branch [`${{ inputs.preview-branch }}`](\
           ${{ github.server_url }}/${{ env.deployrepo }}\
