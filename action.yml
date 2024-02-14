@@ -28,7 +28,7 @@ inputs:
   pages-base-dir:
     description: >
       Directory GitHub is serving your pages from.
-      This will be removed from the `umbrella-dir` to get the true path to the preview.
+      This will be removed from the beginning  of `umbrella-dir` to get the true path to the preview.
 
       _Only needed if you are not serving your GitHub pages from the root of the repository._
     required: false
