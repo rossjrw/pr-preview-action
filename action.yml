@@ -110,7 +110,9 @@ runs:
         
         targetdir="$umbrella/pr-$pr"
         echo "targetdir=$targetdir" >> $GITHUB_ENV
-        echo "pagespath=${targetdir/"$pagesbase"/}" >> $GITHUB_ENV
+        escapedpages=$(sed 's/[&/\]/\\&/g' <<< "$pagesbase")
+        pagespath=$(echo $targetdir | sed -e 's/^'$escapedpages'//')
+        echo "pagespath=$pagespath" >> $GITHUB_ENV
 
         echo "emptydir=$(mktemp -d)" >> $GITHUB_ENV
         echo "datetime=$(date '+%Y-%m-%d %H:%M %Z')" >> $GITHUB_ENV
