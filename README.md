@@ -331,6 +331,7 @@ jobs:
           folder: .
           branch: gh-pages
           clean-exclude: pr-preview
+          force: false
 ```
 
 ### Deployment from `docs/`
