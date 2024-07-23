@@ -17,6 +17,15 @@ inputs:
       repository, you can add a Personal Access Token (PAT).
     required: false
     default: ${{ github.token }}
+  ssh-key:
+    description: >
+      This option allows you to define a private SSH key to be used in conjunction with a repository deployment key to deploy using SSH.
+      The private key should be stored in the `secrets / with` menu **as a secret**. The public should be stored in the repositories deployment
+      keys menu and be given write access.
+
+      Alternatively you can set this field to `true` to enable SSH endpoints for deployment without configuring the ssh client. This can be useful if you've
+      already setup the SSH client using another package or action in a previous step.
+    required: false    
   preview-branch:
     description: Branch on which the previews will be deployed.
     required: false
@@ -125,6 +134,7 @@ runs:
       uses: JamesIves/github-pages-deploy-action@65b5dfd4f5bcd3a7403bbc2959c144256167464e # v4.5.0
       with:
         token: ${{ env.token }}
+        ssh-key: ${{ inputs.ssh-key }}        
         repository-name: ${{ env.deployrepo }}
         branch: ${{ inputs.preview-branch }}
         folder: ${{ inputs.source-dir }}
@@ -163,6 +173,7 @@ runs:
       uses: JamesIves/github-pages-deploy-action@65b5dfd4f5bcd3a7403bbc2959c144256167464e # v4.5.0
       with:
         token: ${{ env.token }}
+        ssh-key: ${{ inputs.ssh-key }}
         repository-name: ${{ env.deployrepo }}
         branch: ${{ inputs.preview-branch }}
         folder: ${{ env.emptydir }}
