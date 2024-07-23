@@ -1,0 +1,11 @@
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      # Check for updates to GitHub Actions every week
+      interval: "weekly"
+    # Prefix can be max 50 chars
+    commit-message:
+      prefix: "[DAT-15011] [gha]"
+      include: "scope"
