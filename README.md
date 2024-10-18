@@ -302,13 +302,13 @@ jobs:
 
 ```yml
 # .github/workflows/deploy.yml
-name: Deploy PR previews
+name: Deploy
 on:
   push:
     branches:
       - main
 jobs:
-  deploy-preview:
+  deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
