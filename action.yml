@@ -87,13 +87,13 @@ runs:
         echo "targetdir=$umbrella/pr-$pr" >> $GITHUB_ENV
         echo "pr=$pr" >> $GITHUB_ENV
 
-        org=$(echo "$deployrepo" | cut -d "/" -f 1)
-        thirdleveldomain=$(echo "$deployrepo" | cut -d "/" -f 2)
+        repo_org=$(echo "$deployrepo" | cut -d "/" -f 1)
+        repo_name=$(echo "$deployrepo" | cut -d "/" -f 2)
 
         if [ ! -z "$customurl" ]; then
           pagesurl="$customurl"
-        elif [ "${org}.github.io" == "$thirdleveldomain" ]; then
-          pagesurl="${org}.github.io"
+        elif [ "${repo_org}.github.io" == "$repo_name" ]; then
+          pagesurl="${repo_org}.github.io"
         else
           pagesurl=$(echo "$deployrepo" | sed 's/\//.github.io\//')
         fi
@@ -144,7 +144,7 @@ runs:
         header: pr-preview
         message: "\
           [PR Preview Action]\
-          (${{ github.server_url }}/${{ env.actionrepo }})
+          (https://github.com/${{ env.actionrepo }})
           ${{ env.action_version }}
 
           :---:
@@ -177,7 +177,7 @@ runs:
         header: pr-preview
         message: "\
           [PR Preview Action]\
-          (${{ github.server_url }}/${{ env.actionrepo }})
+          (https://github.com/${{ env.actionrepo }})
           ${{ env.action_version }}
 
           :---:
