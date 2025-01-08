@@ -25,6 +25,10 @@ inputs:
     description: Name of the directory containing all previews.
     required: false
     default: pr-preview
+  pages-base-path:
+    description: Path that GitHub Pages is served from.
+    required: false
+    default: ""
   source-dir:
     description: Directory containing files to deploy.
     required: false
@@ -76,6 +80,7 @@ runs:
       env:
         action: ${{ inputs.action }}
         umbrella: ${{ inputs.umbrella-dir }}
+        pagesbase: ${{ inputs.pages-base-path }}
         pr: ${{ github.event.number }}
         actionref: ${{ github.action_ref }}
         actionrepo: ${{ github.action_repository }}
@@ -84,7 +89,6 @@ runs:
         token: ${{ inputs.token }}
       run: |
         echo "action=$action" >> $GITHUB_ENV
-        echo "targetdir=$umbrella/pr-$pr" >> $GITHUB_ENV
         echo "pr=$pr" >> $GITHUB_ENV
 
         repo_org=$(echo "$deployrepo" | cut -d "/" -f 1)
@@ -99,6 +103,16 @@ runs:
         fi
 
         echo "pagesurl=$pagesurl" >> $GITHUB_ENV
+
+        targetdir="$umbrella/pr-$pr"
+        echo "targetdir=$targetdir" >> $GITHUB_ENV
+
+        pagespath=$("$GITHUB_ACTION_PATH/lib/remove-prefix-path.sh" -b "$pagesbase" -o "$targetdir")
+        if [ -n "$pagesbase" ] && [ "$("$GITHUB_ACTION_PATH/lib/remove-prefix-path.sh" -b "" -o "$targetdir")" = "$pagespath" ]; then
+          echo "::warning title=pages-base-path doesn't match::pages-base-path directory ($pagesbase) does not contain umbrella-dir ($umbrella). pages-base-path has been ignored."
+          pagespath=$targetdir
+        fi
+        echo "pagespath=$pagespath" >> $GITHUB_ENV
 
         echo "emptydir=$(mktemp -d)" >> $GITHUB_ENV
         echo "datetime=$(date '+%Y-%m-%d %H:%M %Z')" >> $GITHUB_ENV
@@ -134,7 +148,7 @@ runs:
 
     - name: Expose deployment URL
       id: url
-      run: echo "url=https://${{ env.pagesurl }}/${{ env.targetdir }}/"  >> $GITHUB_OUTPUT
+      run: echo "url=https://${{ env.pagesurl }}/${{ env.pagespath }}/"  >> $GITHUB_OUTPUT
       shell: bash
 
     - name: Leave a comment after deployment
@@ -150,7 +164,7 @@ runs:
           :---:
 
           :rocket: Deployed preview to
-          https://${{ env.pagesurl }}/${{ env.targetdir }}/
+          https://${{ env.pagesurl }}/${{ env.pagespath }}/
 
           on branch [`${{ inputs.preview-branch }}`](\
           ${{ github.server_url }}/${{ env.deployrepo }}\

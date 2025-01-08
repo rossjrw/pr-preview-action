@@ -220,6 +220,10 @@ the `with` parameter.
 
   Default: `pr-preview`
 
+- `pages-base-path`: Path that GitHub Pages is being served from, as configured in your repository settings. When generating the preview URL, this is removed from the beginning of the path.
+
+  Default: ` ` (repository root)
+
 - `custom-url`: Base URL to use when providing a link to the preview site.
 
   Default: Will attempt to calculate the repository's GitHub Pages URL
@@ -335,6 +339,7 @@ steps:
       source-dir: build
       preview-branch: main
       umbrella-dir: docs/pr-preview
+      pages-base-path: docs
 ```
 
 You should definitely limit this workflow to run only on changes to
