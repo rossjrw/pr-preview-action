@@ -339,7 +339,7 @@ steps:
       source-dir: build
       preview-branch: main
       umbrella-dir: docs/pr-preview
-      pages-base-dir: docs
+      pages-base-path: docs
 ```
 
 You should definitely limit this workflow to run only on changes to
