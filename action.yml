@@ -25,12 +25,8 @@ inputs:
     description: Name of the directory containing all previews.
     required: false
     default: pr-preview
-  pages-base-dir:
-    description: >
-      Directory GitHub is serving your pages from.
-      This will be removed from the beginning  of `umbrella-dir` to get the true path to the preview.
-
-      _Only needed if you are not serving your GitHub pages from the root of the repository._
+  pages-base-path:
+    description: Path that GitHub Pages is served from.
     required: false
     default: ""
   source-dir:
@@ -84,7 +80,7 @@ runs:
       env:
         action: ${{ inputs.action }}
         umbrella: ${{ inputs.umbrella-dir }}
-        pagesbase: ${{ inputs.pages-base-dir }}
+        pagesbase: ${{ inputs.pages-base-path }}
         pr: ${{ github.event.number }}
         actionref: ${{ github.action_ref }}
         actionrepo: ${{ github.action_repository }}

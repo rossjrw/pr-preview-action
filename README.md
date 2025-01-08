@@ -220,18 +220,9 @@ the `with` parameter.
 
   Default: `pr-preview`
 
-- `pages-base-dir`: Name of the GitHub pages directory being served from.
+- `pages-base-path`: Path that GitHub Pages is being served from, as configured in your repository settings. When generating the preview URL, this is removed from the beginning of the path.
 
-  The pages base directory is removed from the beginning of your `umrella-dir` path to make sure your preview URL is correct.
-
-  Use the same formatting as your `umbrella-dir`, e.g.
-
-  ```yml
-  umbrella-dir: docs/pr-preview
-  pages-base-dir: docs
-  ```
-
-  Default: ` ` *(ignored unless specified)*
+  Default: ` ` (repository root)
 
 - `custom-url`: Base URL to use when providing a link to the preview site.
 
