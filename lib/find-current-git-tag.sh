@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-helpFunction() {
+help() {
   echo ""
   echo "Usage: $0 -p github_repository -f git_ref"
   echo -e "\t-p GitHub repository to clone, format: owner/repo"
@@ -10,21 +10,21 @@ helpFunction() {
 
 while getopts "p:f:" opt; do
   case "$opt" in
-    p) github_repository="$OPTARG" ;;
-    f) git_ref="$OPTARG" ;;
-    ?) helpFunction ;;
+  p) github_repository="$OPTARG" ;;
+  f) git_ref="$OPTARG" ;;
+  ?) help ;;
   esac
 done
 
 if [ -z "$github_repository" ] || [ -z "$git_ref" ]; then
   echo >&2 "some parameters are empty"
-  helpFunction
+  help
 fi
 
 echo >&2 "Determining Git tag for $github_repository/$git_ref"
 
 echo >&2 "Cloning repository $github_repository at ref $git_ref"
-git clone --bare  "https://github.com/$github_repository" bare_pr_preview
+git clone --bare "https://github.com/$github_repository" bare_pr_preview
 
 cd bare_pr_preview || exit 1
 

@@ -103,11 +103,15 @@ runs:
         fi
 
         echo "pagesurl=$pagesurl" >> $GITHUB_ENV
-        
+
         targetdir="$umbrella/pr-$pr"
         echo "targetdir=$targetdir" >> $GITHUB_ENV
-        escapedpages=$(sed 's/[&./\]/\\&/g' <<< "$pagesbase")
-        pagespath=$(echo $targetdir | sed -e 's/^'$escapedpages'\/\?//')
+
+        pagespath=$("$GITHUB_ACTION_PATH/lib/remove-prefix-path.sh" -b "$pagesbase" -o "$targetdir")
+        if [ -n "$pagesbase" ] && [ "$("$GITHUB_ACTION_PATH/lib/remove-prefix-path.sh" -b "" -o "$targetdir")" = "$pagespath" ]; then
+          echo "::warning title=pages-base-path doesn't match::pages-base-path directory ($pagesbase) does not contain umbrella-dir ($umbrella). pages-base-path has been ignored."
+          pagespath=$targetdir
+        fi
         echo "pagespath=$pagespath" >> $GITHUB_ENV
 
         echo "emptydir=$(mktemp -d)" >> $GITHUB_ENV
