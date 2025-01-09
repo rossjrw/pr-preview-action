@@ -116,7 +116,8 @@ jobs:
     steps:
       - uses: rossjrw/pr-preview-action@v1
         id: preview-step
-      - run: echo "Preview visible at ${{ steps.preview-step.outputs.preview-url }}"
+      - if: steps.preview-step.outputs.deployment-action == "deploy"
+        run: echo "Preview visible at ${{ steps.preview-step.outputs.preview-url }}"
 ```
 
 You could use these outputs and input parameter `comment: false` to write your own sticky comment after the Action has run.
