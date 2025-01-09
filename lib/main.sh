@@ -46,3 +46,12 @@ fi
   echo "deployrepo=$deployrepo"
   echo "token=$token"
 } >>"$GITHUB_ENV"
+
+# Export variables for use by later actions in user workflow
+{
+  echo "pages_base_url=$pagesurl"
+  echo "preview_url_path=$pagespath"
+  echo "preview_url=https://$pagesurl/$pagespath/"
+  echo "file_path=$targetdir"
+  echo "action=$action"
+} >>"$GITHUB_OUTPUT"

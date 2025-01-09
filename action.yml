@@ -70,13 +70,17 @@ inputs:
 
 outputs:
   deployment-url:
-    description: The URL at which the preview has been deployed
-    value: ${{ steps.url.outputs.url }}
+    description: Preview deployment URL
+    value: ${{ steps.setup.outputs.preview_url }}
+  url:
+    description: Preview deployment URL
+    value: https://${{ env.pagesurl }}/${{ env.pagespath }}/
 
 runs:
   using: composite
   steps:
     - name: Setup preview environment
+      id: setup
       env:
         action: ${{ inputs.action }}
         umbrella: ${{ inputs.umbrella-dir }}
@@ -101,11 +105,6 @@ runs:
         target-folder: ${{ env.targetdir }}
         commit-message: Deploy preview for PR ${{ env.pr }} 🛫
         force: false
-
-    - name: Expose deployment URL
-      id: url
-      run: echo "url=https://${{ env.pagesurl }}/${{ env.pagespath }}/"  >> $GITHUB_OUTPUT
-      shell: bash
 
     - name: Leave a comment after deployment
       if: env.action == 'deploy' && env.deployment_status == 'success'
