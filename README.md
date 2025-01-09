@@ -93,7 +93,7 @@ jobs:
 
 The following input parameters are provided, which can be passed to the `with` parameter. All parameters are optional and have a default value.
 
-Input parameter | Description
+Input&nbsp;parameter | Description
 --- | ---
 `source-dir` | When creating or updating a preview, the path to the directory that contains the files to deploy. E.g. if your project builds to `./dist/` you would put `./dist/` (or `dist`, etc.). <br> Equivalent to [JamesIves/github-pages-deploy-action](https://github.com/JamesIves/github-pages-deploy-action) 'folder' setting. <br><br> Default: `.` (repository root)
 `deploy-repository` | The repository to deploy the preview to. <br> __Note:__ The `token` parameter must also be set if changing this from the default. <br><br> Default: The pull request's target repository.
