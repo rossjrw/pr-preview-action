@@ -49,7 +49,6 @@ action_start_time=$(date '+%Y-%m-%d %H:%M %Z')
 {
   echo "deployment_action=$deployment_action"
 
-  echo "preview_file_path=$preview_file_path"
   echo "pages_base_url=$pages_base_url"
   echo "preview_url_path=$preview_url_path"
   echo "preview_url=https://$pages_base_url/$preview_url_path/"

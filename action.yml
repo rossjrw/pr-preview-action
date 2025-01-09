@@ -69,12 +69,31 @@ inputs:
     default: auto
 
 outputs:
-  deployment-url:
-    description: Preview deployment URL
+  deployment-action:
+    description: Resolved value of the 'action' input parameter (deploy, remove, none).
+    value: ${{ steps.setup.outputs.deployment_action }}
+  pages-base-url:
+    description: What this Action thinks the base URL of the GitHub Pages site is.
+    value: ${{ steps.setup.outputs.pages_base_url }}
+  preview-url-path:
+    description: Path to the preview from the Pages base URL.
+    value: ${{ steps.setup.outputs.preview_url_path }}
+  preview-url:
+    description: Full URL to the preview (https://[pages-base-url]/[preview-url-path]/).
     value: ${{ steps.setup.outputs.preview_url }}
-  url:
-    description: Preview deployment URL
-    value: https://${{ env.pages_base_url }}/${{ env.preview_url_path }}/
+  action-version:
+    description: The version of this Action when it was run.
+    value: ${{ steps.setup.outputs.action_version }}
+  action-start-timestamp:
+    description: The Unix timestamp that the action started.
+    value: ${{ steps.setup.outputs.action_start_timestamp }}
+  action-start-time:
+    description: The time that the action started in a readable format (UTC, depending on runner).
+    value: ${{ steps.setup.outputs.action_start_time }}
+
+  deployment-url:
+    description: Deprecated, use `preview-url` instead.
+    value: ${{ steps.setup.outputs.preview_url }}
 
 runs:
   using: composite
