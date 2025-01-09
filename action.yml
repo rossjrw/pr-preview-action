@@ -147,7 +147,7 @@ runs:
         message: |
           [PR Preview Action](https://github.com/${{ env.action_repository }}) ${{ env.action_version }}
           :---:
-          :rocket: View preview at ${{ env.preview_url }} <br> (after the GitHub Pages build finishes)
+          :rocket: View preview at ${{ env.preview_url }} <br> (after the [GitHub Pages deployment](${{ github.server_url }}/${{ inputs.deploy-repository }}/deployments) is complete)
           built to branch [`${{ inputs.preview-branch }}`](${{ github.server_url }}/${{ inputs.deploy-repository }}/tree/${{ inputs.preview-branch }}) at ${{ env.action_start_time }}
 
     - name: Remove preview directory
