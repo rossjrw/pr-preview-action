@@ -22,7 +22,7 @@ inputs:
     required: false
     default: gh-pages
   umbrella-dir:
-    description: Name of the directory containing all previews.
+    description: Path to the directory containing all previews.
     required: false
     default: pr-preview
   pages-base-path:
@@ -74,7 +74,7 @@ outputs:
     value: ${{ steps.setup.outputs.preview_url }}
   url:
     description: Preview deployment URL
-    value: https://${{ env.pagesurl }}/${{ env.pagespath }}/
+    value: https://${{ env.pages_base_url }}/${{ env.preview_url_path }}/
 
 runs:
   using: composite
@@ -82,60 +82,60 @@ runs:
     - name: Setup preview environment
       id: setup
       env:
-        action: ${{ inputs.action }}
-        umbrella: ${{ inputs.umbrella-dir }}
-        pagesbase: ${{ inputs.pages-base-path }}
-        pr: ${{ github.event.number }}
-        actionref: ${{ github.action_ref }}
-        actionrepo: ${{ github.action_repository }}
-        customurl: ${{ inputs.custom-url }}
-        deployrepo: ${{ inputs.deploy-repository }}
+        deployment_action: ${{ inputs.action }}
+        umbrella_path: ${{ inputs.umbrella-dir }}
+        pages_base_path: ${{ inputs.pages-base-path }}
+        pr_number: ${{ github.event.number }}
+        github_action_ref: ${{ github.action_ref }}
+        github_action_repository: ${{ github.action_repository }}
+        custom_pages_base_url: ${{ inputs.custom-url }}
+        deployment_repository: ${{ inputs.deploy-repository }}
         token: ${{ inputs.token }}
       run: $GITHUB_ACTION_PATH/lib/main.sh
       shell: bash
 
     - name: Deploy preview directory
-      if: env.action == 'deploy'
+      if: env.deployment_action == 'deploy'
       uses: JamesIves/github-pages-deploy-action@65b5dfd4f5bcd3a7403bbc2959c144256167464e # v4.5.0
       with:
-        token: ${{ env.token }}
-        repository-name: ${{ env.deployrepo }}
+        token: ${{ inputs.token }}
+        repository-name: ${{ inputs.deploy-repository }}
         branch: ${{ inputs.preview-branch }}
         folder: ${{ inputs.source-dir }}
-        target-folder: ${{ env.targetdir }}
-        commit-message: Deploy preview for PR ${{ env.pr }} 🛫
+        target-folder: ${{ env.preview_file_path }}
+        commit-message: Deploy preview for PR ${{ github.event.number }} 🛫
         force: false
 
     - name: Leave a comment after deployment
-      if: env.action == 'deploy' && env.deployment_status == 'success'
+      if: env.deployment_action == 'deploy' && env.deployment_status == 'success'
       uses: marocchino/sticky-pull-request-comment@331f8f5b4215f0445d3c07b4967662a32a2d3e31 # v2.9.0
       with:
         header: pr-preview
         message: |
-          [PR Preview Action](https://github.com/${{ env.actionrepo }}) ${{ env.action_version }}
+          [PR Preview Action](https://github.com/${{ github.action_repository }}) ${{ env.action_version }}
           :---:
-          :rocket: Deployed preview to https://${{ env.pagesurl }}/${{ env.pagespath }}/
-          on branch [`${{ inputs.preview-branch }}`](${{ github.server_url }}/${{ env.deployrepo }}/tree/${{ inputs.preview-branch }}) at ${{ env.datetime }}
+          :rocket: Deployed preview to https://${{ env.pages_base_url }}/${{ env.preview_url_path }}/
+          on branch [`${{ inputs.preview-branch }}`](${{ github.server_url }}/${{ inputs.deploy-repository }}/tree/${{ inputs.preview-branch }}) at ${{ env.action_start_time }}
 
     - name: Remove preview directory
-      if: env.action == 'remove'
+      if: env.deployment_action == 'remove'
       uses: JamesIves/github-pages-deploy-action@65b5dfd4f5bcd3a7403bbc2959c144256167464e # v4.5.0
       with:
-        token: ${{ env.token }}
-        repository-name: ${{ env.deployrepo }}
+        token: ${{ inputs.token }}
+        repository-name: ${{ inputs.deploy-repository }}
         branch: ${{ inputs.preview-branch }}
-        folder: ${{ env.emptydir }}
-        target-folder: ${{ env.targetdir }}
-        commit-message: Remove preview for PR ${{ env.pr }} 🛬
+        folder: ${{ env.empty_dir_path }}
+        target-folder: ${{ env.preview_file_path }}
+        commit-message: Remove preview for PR ${{ github.event.number }} 🛬
         force: false
 
     - name: Leave a comment after removal
-      if: env.action == 'remove' && env.deployment_status == 'success'
+      if: env.deployment_action == 'remove' && env.deployment_status == 'success'
       uses: marocchino/sticky-pull-request-comment@331f8f5b4215f0445d3c07b4967662a32a2d3e31 # v2.9.0
       with:
         header: pr-preview
         message: |
-          [PR Preview Action](https://github.com/${{ env.actionrepo }}) ${{ env.action_version }}
+          [PR Preview Action](https://github.com/${{ github.action_repository }}) ${{ env.action_version }}
           :---:
           Preview removed because the pull request was closed.
-          ${{ env.datetime }}
+          ${{ env.action_start_time }}

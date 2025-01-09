@@ -1,57 +1,60 @@
 #!/usr/bin/env bash
 
-declare action pr deployrepo customurl pagesbase umbrella actionref actionrepo token
+declare deployment_action pr_number deployment_repository custom_pages_base_url pages_base_path umbrella_path github_action_ref github_action_repository
 
-repo_org=$(echo "$deployrepo" | cut -d "/" -f 1)
-repo_name=$(echo "$deployrepo" | cut -d "/" -f 2)
+repo_org=$(echo "$deployment_repository" | cut -d "/" -f 1)
+repo_name=$(echo "$deployment_repository" | cut -d "/" -f 2)
 
-if [ -n "$customurl" ]; then
-  pagesurl="$customurl"
-elif [ "${repo_org}.github.io" == "$repo_name" ]; then
-  pagesurl="${repo_org}.github.io"
+if [ -n "$custom_pages_base_url" ]; then
+  pages_base_url="$custom_pages_base_url"
+elif [ "$repo_name" = "${repo_org}.github.io" ]; then
+  pages_base_url="${repo_org}.github.io"
 else
-  pagesurl=$(echo "$deployrepo" | sed 's/\//.github.io\//')
+  pages_base_url=$(echo "$deployment_repository" | sed 's/\//.github.io\//')
 fi
 
-targetdir="$umbrella/pr-$pr"
+preview_file_path="$umbrella_path/pr-$pr_number"
 
-pagespath=$("$GITHUB_ACTION_PATH/lib/remove-prefix-path.sh" -b "$pagesbase" -o "$targetdir")
-if [ -n "$pagesbase" ] && [ "$("$GITHUB_ACTION_PATH/lib/remove-prefix-path.sh" -b "" -o "$targetdir")" = "$pagespath" ]; then
-  echo "::warning title=pages-base-path doesn't match::pages-base-path directory ($pagesbase) does not contain umbrella-dir ($umbrella). pages-base-path has been ignored."
-  pagespath=$targetdir
+preview_url_path=$("$GITHUB_ACTION_PATH/lib/remove-prefix-path.sh" -b "$pages_base_path" -o "$preview_file_path")
+if [ -n "$pages_base_path" ] && [ "$("$GITHUB_ACTION_PATH/lib/remove-prefix-path.sh" -b "" -o "$preview_file_path")" = "$preview_url_path" ]; then
+  echo "::warning title=pages-base-path doesn't match::The pages-base-path directory ($pages_base_path) does not contain umbrella-dir ($umbrella_path). pages-base-path has been ignored. The value of umbrella-dir should start with the value of pages-base-path."
+  preview_url_path=$preview_file_path
 fi
 
-if [ "$action" = "auto" ]; then
+if [ "$deployment_action" = "auto" ]; then
   echo >&2 "Determining auto action"
-  action=$("$GITHUB_ACTION_PATH/lib/determine-auto-action.sh")
-  echo >&2 "Auto action is $action"
+  deployment_action=$("$GITHUB_ACTION_PATH/lib/determine-auto-action.sh")
+  echo >&2 "Auto action is $deployment_action"
 fi
+
+action_version=$("$GITHUB_ACTION_PATH/lib/find-current-git-tag.sh" -p "$github_action_repository" -f "$github_action_ref")
+action_start_timestamp=$(date '+%s')
+action_start_time=$(date '+%Y-%m-%d %H:%M %Z')
 
 # Export variables for later use by this action
 {
-  echo "emptydir=$(mktemp -d)"
-  echo "datetime=$(date '+%Y-%m-%d %H:%M %Z')"
+  echo "empty_dir_path=$(mktemp -d)"
+  echo "deployment_action=$deployment_action"
 
-  echo "action=$action"
-  echo "pr=$pr"
+  echo "preview_file_path=$preview_file_path"
+  echo "pages_base_url=$pages_base_url"
+  echo "preview_url_path=$preview_url_path"
+  echo "preview_url=https://$pages_base_url/$preview_url_path/"
 
-  echo "targetdir=$targetdir"
-  echo "pagesurl=$pagesurl"
-  echo "pagespath=$pagespath"
-
-  echo "actionref=$actionref"
-  echo "actionrepo=$actionrepo"
-  echo "action_version=$("$GITHUB_ACTION_PATH/lib/find-current-git-tag.sh" -p "$actionrepo" -f "$actionref")"
-
-  echo "deployrepo=$deployrepo"
-  echo "token=$token"
+  echo "action_version=$action_version"
+  echo "action_start_time=$action_start_time"
 } >>"$GITHUB_ENV"
 
 # Export variables for use by later actions in user workflow
 {
-  echo "pages_base_url=$pagesurl"
-  echo "preview_url_path=$pagespath"
-  echo "preview_url=https://$pagesurl/$pagespath/"
-  echo "file_path=$targetdir"
-  echo "action=$action"
+  echo "deployment_action=$deployment_action"
+
+  echo "preview_file_path=$preview_file_path"
+  echo "pages_base_url=$pages_base_url"
+  echo "preview_url_path=$preview_url_path"
+  echo "preview_url=https://$pages_base_url/$preview_url_path/"
+
+  echo "action_version=$action_version"
+  echo "action_start_timestamp=$action_start_timestamp"
+  echo "action_start_time=$action_start_time"
 } >>"$GITHUB_OUTPUT"

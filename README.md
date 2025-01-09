@@ -208,7 +208,7 @@ the `with` parameter.
 
   Default: `gh-pages`
 
-- `umbrella-dir`: Name of the directory containing all previews. All
+- `umbrella-dir`: Path to the directory containing all previews. All
   previews will be created inside this directory.
 
   The umbrella directory is used to namespace previews from your main
