@@ -156,21 +156,11 @@ runs:
       uses: marocchino/sticky-pull-request-comment@331f8f5b4215f0445d3c07b4967662a32a2d3e31 # v2.9.0
       with:
         header: pr-preview
-        message: "\
-          [PR Preview Action]\
-          (https://github.com/${{ env.actionrepo }})
-          ${{ env.action_version }}
-
+        message: |
+          [PR Preview Action](https://github.com/${{ env.actionrepo }}) ${{ env.action_version }}
           :---:
-
-          :rocket: Deployed preview to
-          https://${{ env.pagesurl }}/${{ env.pagespath }}/
-
-          on branch [`${{ inputs.preview-branch }}`](\
-          ${{ github.server_url }}/${{ env.deployrepo }}\
-          /tree/${{ inputs.preview-branch }})
-          at ${{ env.datetime }}
-          "
+          :rocket: Deployed preview to https://${{ env.pagesurl }}/${{ env.pagespath }}/
+          on branch [`${{ inputs.preview-branch }}`](${{ github.server_url }}/${{ env.deployrepo }}/tree/${{ inputs.preview-branch }}) at ${{ env.datetime }}
 
     - name: Remove preview directory
       if: env.action == 'remove'
@@ -189,14 +179,8 @@ runs:
       uses: marocchino/sticky-pull-request-comment@331f8f5b4215f0445d3c07b4967662a32a2d3e31 # v2.9.0
       with:
         header: pr-preview
-        message: "\
-          [PR Preview Action]\
-          (https://github.com/${{ env.actionrepo }})
-          ${{ env.action_version }}
-
+        message: |
+          [PR Preview Action](https://github.com/${{ env.actionrepo }}) ${{ env.action_version }}
           :---:
-
           Preview removed because the pull request was closed.
-
           ${{ env.datetime }}
-          "
