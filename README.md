@@ -29,7 +29,7 @@ This Action does not currently support deploying previews for PRs from forks,
 but will do so in [the upcoming
 v2](https://github.com/rossjrw/pr-preview-action/pull/6).
 
-## Usage
+# Usage
 
 A [GitHub Actions
 workflow](https://docs.github.com/en/actions/learn-github-actions) is
@@ -89,7 +89,7 @@ jobs:
           source-dir: ./build/
 ```
 
-# Inputs (configuration)
+## Inputs (configuration)
 
 The following input parameters are provided, which can be passed to the `with` parameter. All parameters are optional and have a default value.
 
@@ -105,7 +105,7 @@ Input&nbsp;parameter | Description
 `token` | Authentication token for the preview deployment. <br> The default value works for non-fork pull requests to the same repository. For anything else, you will need a [Personal Access Token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token) with permission to access it, and [store it as a secret](https://docs.github.com/en/actions/security-guides/using-secrets-in-github-actions) in your repository. E.g. you might name that secret 'PREVIEW_TOKEN' and use it with `token: ${{ secrets.PREVIEW_TOKEN }}`. <br><br> Default: `${{ github.token }}`, which gives the action permission to deploy to the current repository.
 `action` <br> (enum) | Determines what this action will do when it is executed. Supported values: <br><br> <ul><li>`deploy` - create and deploy the preview, overwriting any existing preview in that location.</li><li>`remove` - remove the preview.</li><li>`auto` - determine whether to deploy or remove the preview based on [the emitted event](https://docs.github.com/en/developers/webhooks-and-events/webhooks/webhook-events-and-payloads#pull_request). If the event is `pull_request`, it will deploy the preview when the event type is `opened`, `reopened` and `synchronize`, and remove it on `closed` events. Does not do anything for other events or event types, even if you explicitly instruct the workflow to run on them.</li><li>`none` and all other values: does not do anything.</li></ul> Default: `auto`
 
-# Outputs
+## Outputs
 
 Several output values are provided to use after this Action in your workflow. To use them, give this Action's step an `id` and reference the value with `${{ steps.<id>.outputs.<name> }}`, e.g.:
 
@@ -132,7 +132,9 @@ Output | Description
 `action-start-timestamp` | The time that the workflow step started as a Unix timestamp.
 `action-start-time` | The time that the workflow step started in a readable format (UTC, depending on runner).
 
-# Common pitfalls
+# Considerations
+
+## Common pitfalls
 
 ### Grant Actions permission to read and write to the repository
 
@@ -212,7 +214,7 @@ vice-versa.
 
    This feature was introduced in v4.3.0 of the above Action.
 
-# Best practices
+## Best practices
 
 ### Run only when files are changed
 
@@ -228,9 +230,9 @@ scoped to each PR using `github.ref` as above, which should prevent the
 preview and comment from desynchronising if you are e.g. committing very
 frequently.
 
-# Examples
+## Examples
 
-## Full example
+### Full example
 
 Full example with all default values added:
 
@@ -283,7 +285,7 @@ jobs:
           force: false
 ```
 
-## Deployment from `docs/`
+### Deployment from `docs/`
 
 If your Pages site is built to `build/` and deployed from the `docs/`
 directory on the `main` branch:
@@ -303,7 +305,7 @@ steps:
 You should definitely limit this workflow to run only on changes to
 directories other than `docs/`, otherwise this workflow will call itself recursively.
 
-## Only remove previews for unmerged PRs
+### Only remove previews for unmerged PRs
 
 Information from the context and conditionals can be used to make more
 complex decisions about what to do with previews; for example, removing
@@ -325,7 +327,7 @@ steps:
       action: remove
 ```
 
-## Permanent previews
+### Permanent previews
 
 If you want to keep PR previews around forever, even after the associated
 PR has been closed, you don't want the cleanup behaviour of `auto` &mdash;
