@@ -1,16 +1,22 @@
 #!/usr/bin/env bash
 
-declare deployment_action pr_number deployment_repository custom_pages_base_url pages_base_path umbrella_path github_action_ref github_action_repository
+declare deployment_action pr_number deployment_repository pages_base_url pages_base_path umbrella_path github_action_ref github_action_repository deprecated_custom_url
 
-repo_org=$(echo "$deployment_repository" | cut -d "/" -f 1)
-repo_name=$(echo "$deployment_repository" | cut -d "/" -f 2)
+# Deprecation of custom-url in favour of pages-base-url
+if [ -z "$pages_base_url" ] && [ -n "$deprecated_custom_url" ]; then
+  pages_base_url=$deprecated_custom_url
+fi
 
-if [ -n "$custom_pages_base_url" ]; then
-  pages_base_url="$custom_pages_base_url"
-elif [ "$repo_name" = "${repo_org}.github.io" ]; then
-  pages_base_url="${repo_org}.github.io"
-else
-  pages_base_url=$(echo "$deployment_repository" | sed 's/\//.github.io\//')
+# If pages_base_url was not set by the user, try to guess
+if [ -z "$pages_base_url" ]; then
+  # Either .github.io or .github.io/repo
+  repo_org=$(echo "$deployment_repository" | cut -d "/" -f 1)
+  repo_name=$(echo "$deployment_repository" | cut -d "/" -f 2)
+  if [ "$repo_name" = "${repo_org}.github.io" ]; then
+    pages_base_url="${repo_org}.github.io"
+  else
+    pages_base_url=$(echo "$deployment_repository" | sed -e 's/\//.github.io\//')
+  fi
 fi
 
 preview_file_path="$umbrella_path/pr-$pr_number"

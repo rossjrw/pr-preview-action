@@ -25,6 +25,10 @@ inputs:
     description: Path to the directory containing all previews.
     required: false
     default: pr-preview
+  pages-base-url:
+    description: URL of the repo's GitHub Pages site.
+    required: false
+    default: ""
   pages-base-path:
     description: Path that GitHub Pages is served from.
     required: false
@@ -45,8 +49,10 @@ inputs:
       to another repository.
     required: false
     default: ${{ github.repository }}
+
   custom-url:
-    description: Custom pages URL
+    description: Deprecated, use `pages-base-url` instead.
+    deprecationMessage: Use `pages-base-url` instead.
     required: false
     default: ""
   action:
@@ -103,13 +109,14 @@ runs:
       env:
         deployment_action: ${{ inputs.action }}
         umbrella_path: ${{ inputs.umbrella-dir }}
+        pages_base_url: ${{ inputs.pages-base-url }}
         pages_base_path: ${{ inputs.pages-base-path }}
         pr_number: ${{ github.event.number }}
         github_action_ref: ${{ github.action_ref }}
         github_action_repository: ${{ github.action_repository }}
-        custom_pages_base_url: ${{ inputs.custom-url }}
         deployment_repository: ${{ inputs.deploy-repository }}
         token: ${{ inputs.token }}
+        deprecated_custom_url: ${{ inputs.custom-url }}
       run: $GITHUB_ACTION_PATH/lib/main.sh
       shell: bash
 
