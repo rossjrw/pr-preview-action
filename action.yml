@@ -76,7 +76,7 @@ outputs:
 runs:
   using: composite
   steps:
-    - name: Store environment variables
+    - name: Setup preview environment
       env:
         action: ${{ inputs.action }}
         umbrella: ${{ inputs.umbrella-dir }}
@@ -87,51 +87,7 @@ runs:
         customurl: ${{ inputs.custom-url }}
         deployrepo: ${{ inputs.deploy-repository }}
         token: ${{ inputs.token }}
-      run: |
-        echo "action=$action" >> $GITHUB_ENV
-        echo "pr=$pr" >> $GITHUB_ENV
-
-        repo_org=$(echo "$deployrepo" | cut -d "/" -f 1)
-        repo_name=$(echo "$deployrepo" | cut -d "/" -f 2)
-
-        if [ ! -z "$customurl" ]; then
-          pagesurl="$customurl"
-        elif [ "${repo_org}.github.io" == "$repo_name" ]; then
-          pagesurl="${repo_org}.github.io"
-        else
-          pagesurl=$(echo "$deployrepo" | sed 's/\//.github.io\//')
-        fi
-
-        echo "pagesurl=$pagesurl" >> $GITHUB_ENV
-
-        targetdir="$umbrella/pr-$pr"
-        echo "targetdir=$targetdir" >> $GITHUB_ENV
-
-        pagespath=$("$GITHUB_ACTION_PATH/lib/remove-prefix-path.sh" -b "$pagesbase" -o "$targetdir")
-        if [ -n "$pagesbase" ] && [ "$("$GITHUB_ACTION_PATH/lib/remove-prefix-path.sh" -b "" -o "$targetdir")" = "$pagespath" ]; then
-          echo "::warning title=pages-base-path doesn't match::pages-base-path directory ($pagesbase) does not contain umbrella-dir ($umbrella). pages-base-path has been ignored."
-          pagespath=$targetdir
-        fi
-        echo "pagespath=$pagespath" >> $GITHUB_ENV
-
-        echo "emptydir=$(mktemp -d)" >> $GITHUB_ENV
-        echo "datetime=$(date '+%Y-%m-%d %H:%M %Z')" >> $GITHUB_ENV
-
-        echo "actionref=$actionref" >> $GITHUB_ENV
-        echo "actionrepo=$actionrepo" >> $GITHUB_ENV
-        echo "deployrepo=$deployrepo" >> $GITHUB_ENV
-        echo "token=$token" >> $GITHUB_ENV
-      shell: bash
-
-    - name: Determine action version
-      run: |
-        action_version=$("$GITHUB_ACTION_PATH/lib/find-current-git-tag.sh" -p $actionrepo -f $actionref)
-        echo "action_version=$action_version" >> "$GITHUB_ENV"
-      shell: bash
-
-    - name: Determine auto action
-      if: env.action == 'auto'
-      run: $GITHUB_ACTION_PATH/lib/determine-auto-action.sh
+      run: $GITHUB_ACTION_PATH/lib/main.sh
       shell: bash
 
     - name: Deploy preview directory
