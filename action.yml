@@ -49,6 +49,10 @@ inputs:
       to another repository.
     required: false
     default: ${{ github.repository }}
+  comment:
+    description: Whether to leave a sticky comment on the calling PR.
+    required: false
+    default: "true"
 
   custom-url:
     description: Deprecated, use `pages-base-url` instead.
@@ -133,7 +137,10 @@ runs:
         force: false
 
     - name: Leave a comment after deployment
-      if: env.deployment_action == 'deploy' && env.deployment_status == 'success'
+      if: |
+        env.deployment_action == 'deploy' &&
+        env.deployment_status == 'success' &&
+        (inputs.comment == 'true' || inputs.comment == true)
       uses: marocchino/sticky-pull-request-comment@331f8f5b4215f0445d3c07b4967662a32a2d3e31 # v2.9.0
       with:
         header: pr-preview
@@ -156,7 +163,10 @@ runs:
         force: false
 
     - name: Leave a comment after removal
-      if: env.deployment_action == 'remove' && env.deployment_status == 'success'
+      if: |
+        env.deployment_action == 'remove' &&
+        env.deployment_status == 'success' &&
+        (inputs.comment == 'true' || inputs.comment == true)
       uses: marocchino/sticky-pull-request-comment@331f8f5b4215f0445d3c07b4967662a32a2d3e31 # v2.9.0
       with:
         header: pr-preview
