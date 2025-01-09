@@ -47,6 +47,7 @@ action_start_time=$(date '+%Y-%m-%d %H:%M %Z')
   echo "preview_url_path=$preview_url_path"
   echo "preview_url=https://$pages_base_url/$preview_url_path/"
 
+  echo "action_repository=$github_action_repository"
   echo "action_version=$action_version"
   echo "action_start_time=$action_start_time"
 } >>"$GITHUB_ENV"

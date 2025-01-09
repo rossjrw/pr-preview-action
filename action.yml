@@ -145,7 +145,7 @@ runs:
       with:
         header: pr-preview
         message: |
-          [PR Preview Action](https://github.com/${{ github.action_repository }}) ${{ env.action_version }}
+          [PR Preview Action](https://github.com/${{ env.action_repository }}) ${{ env.action_version }}
           :---:
           :rocket: View preview at ${{ env.preview_url }} <br> (after the GitHub Pages build finishes)
           built to branch [`${{ inputs.preview-branch }}`](${{ github.server_url }}/${{ inputs.deploy-repository }}/tree/${{ inputs.preview-branch }}) at ${{ env.action_start_time }}
@@ -171,7 +171,7 @@ runs:
       with:
         header: pr-preview
         message: |
-          [PR Preview Action](https://github.com/${{ github.action_repository }}) ${{ env.action_version }}
+          [PR Preview Action](https://github.com/${{ env.action_repository }}) ${{ env.action_version }}
           :---:
           Preview removed because the pull request was closed.
           ${{ env.action_start_time }}
