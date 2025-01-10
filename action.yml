@@ -13,6 +13,7 @@ inputs:
         description: >
             The token to use for the deployment. Default is GITHUB_TOKEN in the current repository. If you need more permissions for things such as deploying to another repository, you can add a Personal Access Token (PAT).
 
+
         required: false
         default: ${{ github.token }}
     preview-branch:
@@ -39,6 +40,7 @@ inputs:
         description: >
             The PR number to use for the preview path. Defaults to the PR number from the GitHub event context. Override this for testing or when not triggered by a pull_request event.
 
+
         required: false
         default: ""
     deploy-repository:
@@ -47,11 +49,13 @@ inputs:
             
             You will need to add a Personal Access Token (PAT) in the `token` input in order to allow the action running in one repository to make changes to another repository.
 
+
         required: false
         default: ${{ github.repository }}
     wait-for-pages-deployment:
         description: >
             Whether to wait for GitHub Pages deployment before continuing, e.g. to ensure the preview URL is actually accessible when the sticky comment is posted.
+
 
         required: false
         default: "false"
@@ -59,6 +63,10 @@ inputs:
         description: Whether to leave a sticky comment on the calling PR at the end of the workflow.
         required: false
         default: "true"
+    qr-code:
+        description: Whether to display a QR code in the sticky comment.
+        required: false
+        default: "false"
     deploy-commit-message:
         description: The commit message to use when adding/updating a preview.
         required: false
@@ -88,6 +96,7 @@ inputs:
             If set to `remove`, will attempt to remove the preview in that location.
             
             If set to `auto`, the action will try to determine whether to deploy or remove the preview. It will deploy the preview on `pull_request.types.synchronize` and `.opened` events, and remove it on `pull_request.types.closed` events. It will not do anything for all other events. `auto` is the default value.
+
 
         required: false
         default: auto
