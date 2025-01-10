@@ -72,10 +72,10 @@ concurrency: preview-${{ github.ref }}
 
 jobs:
   deploy-preview:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install and Build
         if: github.event.action != 'closed' # You might want to skip the build if the PR has been closed
@@ -128,7 +128,7 @@ Output | Description
 `pages-base-url` | What this Action thinks the base URL of the GitHub Pages site is.
 `preview-url-path` | Path to the preview from the Pages base URL.
 `preview-url` | Full URL to the preview (`https://<pages-base-url>/<preview-url-path>/`).
-`action-version` | The version of this Action when it was run.
+`action-version` | The full, exact version of this Action when it was run.
 `action-start-timestamp` | The time that the workflow step started as a Unix timestamp.
 `action-start-time` | The time that the workflow step started in a readable format (UTC, depending on runner).
 
@@ -251,7 +251,7 @@ jobs:
   deploy-preview:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - run: npm i && npm run build
         if: github.event.action != 'closed'
       - uses: rossjrw/pr-preview-action@v1
@@ -275,7 +275,7 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - run: npm i && npm run build
       - uses: JamesIves/github-pages-deploy-action@v4
         with:
@@ -344,14 +344,66 @@ on:
       - synchronize
 jobs:
   deploy-preview:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - run: npm i && npm run build
       - uses: rossjrw/pr-preview-action@v1
         with:
           source-dir: ./build/
           action: deploy
+```
+
+### Customise the sticky comment
+
+You can use `id`, `with: comment: false`, the output values and [context variables](https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/accessing-contextual-information-about-workflow-runs) to construct your own comment to be left on the PR. This example recreates this Action's default comment (complete with HTML spacing jank), but you could change it however you like, use a different commenting Action from the marketplace, etc.
+
+```yml
+# .github/workflows/preview.yml
+name: Deploy PR preview
+concurrency: preview-${{ github.ref }}
+on:
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - closed
+env:
+  PREVIEW_BRANCH: gh-pages
+jobs:
+  deploy-preview:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: npm i && npm run build
+
+      - uses: rossjrw/pr-preview-action@v1
+        id: preview-step
+        with:
+          source-dir: ./build/
+          preview-branch: ${{ env.PREVIEW_BRANCH }}
+          comment: false
+
+      - uses: marocchino/sticky-pull-request-comment@v2
+        if: steps.preview-step.outputs.deployment_action == 'deploy' && env.deployment_status == 'success'
+        with:
+          header: pr-preview
+          message: |
+            [PR Preview Action](https://github.com/rossjrw/pr-preview-action) ${{ steps.preview-step.outputs.action-version }}
+            :---:
+            | <p></p> :rocket: View preview at <br> ${{ steps.preview-step.outputs.preview-url }} <br><br>
+            | <h6>Built to branch [`${{ env.PREVIEW_BRANCH }}`](${{ github.server_url }}/${{ github.repository }}/tree/${{ env.PREVIEW_BRANCH }}) at ${{ steps.preview-step.outputs.action-start-time }}. <br> Preview will be ready when the [GitHub Pages deployment](${{ github.server_url }}/${{ github.repository }}/deployments) is complete. <br><br> </h6>
+
+      - uses: marocchino/sticky-pull-request-comment@v2
+        if: steps.preview-step.outputs.deployment_action == 'remove' && env.deployment_status == 'success'
+        with:
+          header: pr-preview
+          message: |
+            [PR Preview Action](https://github.com/rossjrw/pr-preview-action) ${{ steps.preview-step.outputs.action-version }}
+            :---:
+            Preview removed because the pull request was closed.
+            ${{ steps.preview-step.outputs.action-start-time }}
 ```
 
 # Acknowledgements
