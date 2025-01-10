@@ -29,7 +29,7 @@ This Action does not currently support deploying previews for PRs from forks,
 but will do so in [the upcoming
 v2](https://github.com/rossjrw/pr-preview-action/pull/6).
 
-## Usage
+# Usage
 
 A [GitHub Actions
 workflow](https://docs.github.com/en/actions/learn-github-actions) is
@@ -89,15 +89,61 @@ jobs:
           source-dir: ./build/
 ```
 
-### Important things to be aware of
+## Inputs (configuration)
 
-#### Run only when files are changed
+The following input parameters are provided, which can be passed to the `with` parameter. All parameters are optional and have a default value.
 
-Consider limiting this workflow to run [only when relevant files are
-edited](https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#onpushpull_requestpull_request_targetpathspaths-ignore)
-to avoid deploying previews unnecessarily.
+Input&nbsp;parameter | Description
+--- | ---
+`source-dir` | When creating or updating a preview, the path to the directory that contains the files to deploy. E.g. if your project builds to `./dist/` you would put `./dist/` (or `dist`, etc.). <br> Equivalent to [JamesIves/github-pages-deploy-action](https://github.com/JamesIves/github-pages-deploy-action) 'folder' setting. <br><br> Default: `.` (repository root)
+`deploy-repository` | The repository to deploy the preview to. <br> __Note:__ The `token` parameter must also be set if changing this from the default. <br><br> Default: The pull request's target repository.
+`preview-branch` | Branch to save previews to. This should be the same branch that your GitHub Pages site is deployed from. <br><br> Default: `gh-pages`
+`umbrella-dir` | Path to the directory to place previews in. <br> The umbrella directory is used to namespace previews from your main branch's deployment on GitHub Pages. <br><br> Default: `pr-preview`
+`pages-base-url` | Base URL to use when providing a link to the preview site. <br><br> Default: The pull request's target repository's default GitHub Pages URL (e.g. `rossjrw.github.io/pr-preview-action/`)
+`pages-base-path` | Path that GitHub Pages is being served from, as configured in your repository settings, e.g. `docs/`. When generating the preview URL path, this is removed from the beginning of the file path. <br><br> Default: `.` (repository root)
+`comment` <br> (boolean) | Whether to leave a [sticky comment](https://github.com/marocchino/sticky-pull-request-comment) on the PR after the preview is built.<br> The comment may be added before the preview finishes deploying. <br><br> Default: `true`
+`token` | Authentication token for the preview deployment. <br> The default value works for non-fork pull requests to the same repository. For anything else, you will need a [Personal Access Token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token) with permission to access it, and [store it as a secret](https://docs.github.com/en/actions/security-guides/using-secrets-in-github-actions) in your repository. E.g. you might name that secret 'PREVIEW_TOKEN' and use it with `token: ${{ secrets.PREVIEW_TOKEN }}`. <br><br> Default: `${{ github.token }}`, which gives the action permission to deploy to the current repository.
+`action` <br> (enum) | Determines what this action will do when it is executed. Supported values: <br><br> <ul><li>`deploy` - create and deploy the preview, overwriting any existing preview in that location.</li><li>`remove` - remove the preview.</li><li>`auto` - determine whether to deploy or remove the preview based on [the emitted event](https://docs.github.com/en/developers/webhooks-and-events/webhooks/webhook-events-and-payloads#pull_request). If the event is `pull_request`, it will deploy the preview when the event type is `opened`, `reopened` and `synchronize`, and remove it on `closed` events. Does not do anything for other events or event types, even if you explicitly instruct the workflow to run on them.</li><li>`none` and all other values: does not do anything.</li></ul> Default: `auto`
 
-#### Run on all appropriate pull request events
+## Outputs
+
+Several output values are provided to use after this Action in your workflow. To use them, give this Action's step an `id` and reference the value with `${{ steps.<id>.outputs.<name> }}`, e.g.:
+
+```yml
+# .github/workflows/preview.yml
+jobs:
+  deploy-preview:
+    steps:
+      - uses: rossjrw/pr-preview-action@v1
+        id: preview-step
+      - if: steps.preview-step.outputs.deployment-action == "deploy"
+        run: echo "Preview visible at ${{ steps.preview-step.outputs.preview-url }}"
+```
+
+You could use these outputs and input parameter `comment: false` to write your own sticky comment after the Action has run.
+
+Output | Description
+--- | ---
+`deployment-action` | Resolved value of the `action` input parameter (deploy, remove, none).
+`pages-base-url` | What this Action thinks the base URL of the GitHub Pages site is.
+`preview-url-path` | Path to the preview from the Pages base URL.
+`preview-url` | Full URL to the preview (`https://<pages-base-url>/<preview-url-path>/`).
+`action-version` | The version of this Action when it was run.
+`action-start-timestamp` | The time that the workflow step started as a Unix timestamp.
+`action-start-time` | The time that the workflow step started in a readable format (UTC, depending on runner).
+
+# Considerations
+
+## Common pitfalls
+
+### Grant Actions permission to read and write to the repository
+
+This must be changed in the repository settings by selecting "Read and
+write permissions" at **Settings** > **Actions** > **General** >
+**Workflow permissions**. Otherwise, the Action won't be able to make any
+changes to your deployment branch.
+
+### Run on all appropriate pull request events
 
 Be sure to [pick the right event
 types](https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#pull_request)
@@ -106,22 +152,7 @@ for the `pull_request` event. It only comes with `opened`, `reopened`, and
 the preview should be removed during the `closed` event, which it only sees
 if you explicitly add it to the workflow.
 
-#### Grant Actions permission to read and write to the repository
-
-This must be changed in the repository settings by selecting "Read and
-write permissions" at **Settings** > **Actions** > **General** >
-**Workflow permissions**. Otherwise, the Action won't be able to make any
-changes to your deployment branch.
-
-#### Set a concurrency group
-
-I highly recommend [setting a concurrency
-group](https://docs.github.com/en/actions/using-jobs/using-concurrency)
-scoped to each PR using `github.ref` as above, which should prevent the
-preview and comment from desynchronising if you are e.g. committing very
-frequently.
-
-#### Ensure your main deployment is compatible
+### Ensure your main deployment is compatible
 
 If you are using GitHub Actions to deploy your GitHub Pages sites
 (typically on push to the main branch), there are some actions you should
@@ -161,11 +192,11 @@ vice-versa.
    all files in the deployment location. This will destroy any ongoing
    preview deployments. Instead, consider adjusting your deployment
    workflow to rebase or merge your main deployment onto the deployment
-   branch such that it respects other ongoing deployments.
+   branch to respect other ongoing deployments.
 
    For example, if you are using
    [JamesIves/github-pages-deploy-action](https://github.com/JamesIves/github-pages-deploy-action)
-   to deploy your build, be aware that at the time of writing (v4.3.0) it
+   to deploy your build, be aware that at the time of writing (v4.7.2) it
    force-pushes new deployments by default. You can disable this by setting
    its `force` parameter to `false`, which will prompt it to rebase new
    deployments instead of force-pushing them:
@@ -183,92 +214,21 @@ vice-versa.
 
    This feature was introduced in v4.3.0 of the above Action.
 
-####
+## Best practices
 
-## Configuration
+### Run only when files are changed
 
-The following configuration settings are provided, which can be passed to
-the `with` parameter.
+Consider limiting this workflow to run [only when relevant files are
+edited](https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#onpushpull_requestpull_request_targetpathspaths-ignore)
+to avoid deploying previews unnecessarily.
 
-- `source-dir`: Directory containing files to deploy.
+### Set a concurrency group
 
-  E.g. if your project builds to `./dist/` you would put `./dist/` (or just
-  `dist`) here. For the root directory of your project, put `.` here.
-
-  Equivalent to
-  [JamesIves/github-pages-deploy-action](https://github.com/JamesIves/github-pages-deploy-action)
-  'folder' setting.
-
-  Will be ignored when removing a preview.
-
-  Default: `.`
-
-- `preview-branch`: Branch on which the previews will be deployed. This
-  should be the same branch that your GitHub Pages site is deployed from.
-
-  Default: `gh-pages`
-
-- `umbrella-dir`: Name of the directory containing all previews. All
-  previews will be created inside this directory.
-
-  The umbrella directory is used to namespace previews from your main
-  branch's deployment on GitHub Pages.
-
-  Set to `.` to place preview directories into the root directory, but be
-  aware that this may cause your main branch's deployment to interfere with
-  your preview deployments (and vice-versa!)
-
-  Default: `pr-preview`
-
-- `pages-base-path`: Path that GitHub Pages is being served from, as configured in your repository settings. When generating the preview URL, this is removed from the beginning of the path.
-
-  Default: ` ` (repository root)
-
-- `custom-url`: Base URL to use when providing a link to the preview site.
-
-  Default: Will attempt to calculate the repository's GitHub Pages URL
-  (e.g. "rossjrw.github.io").
-
-- `deploy-repository`: The repository to deploy the preview to.
-
-  If this value is changed from the default, the `token` parameter must also
-  be set (see below).
-
-  Default: The current repository that the pull request was made in.
-
-- `token`: The token to use for the preview deployment. The default value is
-  fine for deployments to the current repository, but if you want to deploy
-  the preview to a different repository (see `deploy-repository` above), you
-  will need to create a [Personal Access
-  Token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token)
-  with permission to access it, and [store it as a
-  secret](https://docs.github.com/en/actions/security-guides/using-secrets-in-github-actions)
-  in your repository. E.g. you might name that secret 'PREVIEW_TOKEN' and
-  use it with `token: ${{ secrets.PREVIEW_TOKEN }}`.
-
-  Default: `${{ github.token }}`, which gives the action permission to
-  deploy to the current repository.
-
-- **(Advanced)** `action`: Determines what this action will do when it is
-  executed. Supported values: `deploy`, `remove`, `none`, `auto`.
-
-  - `deploy`: will attempt to deploy the preview and overwrite any
-    existing preview in that location.
-  - `remove`: will attempt to remove the preview in that location.
-  - `auto`: the action will try to determine whether to deploy or remove
-    the preview based on [the emitted
-    event](https://docs.github.com/en/developers/webhooks-and-events/webhooks/webhook-events-and-payloads#pull_request).
-    It will deploy the preview on `pull_request.types.opened`, `.reopened`
-    and `.synchronize` events; and remove it on `pull_request.types.closed`
-    events. It will not do anything for all other events, even if you
-    explicitly specify that the workflow should run on them.
-  - `none` and all other values: the action will not do anything.
-
-  Default value: `auto`
-
-## Outputs
-
-- `deployment-url`: the URL at which the preview has been deployed.
+I highly recommend [setting a concurrency
+group](https://docs.github.com/en/actions/using-jobs/using-concurrency)
+scoped to each PR using `github.ref` as above, which should prevent the
+preview and comment from desynchronising if you are e.g. committing very
+frequently.
 
 ## Examples
 
@@ -394,13 +354,11 @@ jobs:
           action: deploy
 ```
 
-## Acknowledgements
+# Acknowledgements
 
 Big thanks to the following:
 
-- [shlinkio/deploy-preview-action](https://github.com/shlinkio/deploy-preview-action)
-  (MIT), prior art that informed the direction of this Action
-- [JamesIves/github-pages-deploy-action](https://github.com/JamesIves/github-pages-deploy-action)
-  (MIT), used by this Action to deploy previews
-- [marocchino/sticky-pull-request-comment](https://github.com/marocchino/sticky-pull-request-comment)
-  (MIT), used by this Action to leave a sticky comment on pull requests
+- [shlinkio/deploy-preview-action](https://github.com/shlinkio/deploy-preview-action) (MIT), prior art that informed the direction of this Action
+- [JamesIves/github-pages-deploy-action](https://github.com/JamesIves/github-pages-deploy-action) (MIT), used by this Action to deploy previews
+- [marocchino/sticky-pull-request-comment](https://github.com/marocchino/sticky-pull-request-comment) (MIT), used by this Action to leave a sticky comment on pull requests
+- [Everyone who has contributed](https://github.com/rossjrw/pr-preview-action/graphs/contributors) to this Action

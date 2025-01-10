@@ -22,9 +22,13 @@ inputs:
     required: false
     default: gh-pages
   umbrella-dir:
-    description: Name of the directory containing all previews.
+    description: Path to the directory containing all previews.
     required: false
     default: pr-preview
+  pages-base-url:
+    description: URL of the repo's GitHub Pages site.
+    required: false
+    default: ""
   pages-base-path:
     description: Path that GitHub Pages is served from.
     required: false
@@ -45,8 +49,14 @@ inputs:
       to another repository.
     required: false
     default: ${{ github.repository }}
+  comment:
+    description: Whether to leave a sticky comment on the calling PR.
+    required: false
+    default: "true"
+
   custom-url:
-    description: Custom pages URL
+    description: Deprecated, use `pages-base-url` instead.
+    deprecationMessage: Use `pages-base-url` instead.
     required: false
     default: ""
   action:
@@ -69,134 +79,99 @@ inputs:
     default: auto
 
 outputs:
+  deployment-action:
+    description: Resolved value of the 'action' input parameter (deploy, remove, none).
+    value: ${{ steps.setup.outputs.deployment_action }}
+  pages-base-url:
+    description: What this Action thinks the base URL of the GitHub Pages site is.
+    value: ${{ steps.setup.outputs.pages_base_url }}
+  preview-url-path:
+    description: Path to the preview from the Pages base URL.
+    value: ${{ steps.setup.outputs.preview_url_path }}
+  preview-url:
+    description: Full URL to the preview (https://[pages-base-url]/[preview-url-path]/).
+    value: ${{ steps.setup.outputs.preview_url }}
+  action-version:
+    description: The version of this Action when it was run.
+    value: ${{ steps.setup.outputs.action_version }}
+  action-start-timestamp:
+    description: The Unix timestamp that the action started.
+    value: ${{ steps.setup.outputs.action_start_timestamp }}
+  action-start-time:
+    description: The time that the action started in a readable format (UTC, depending on runner).
+    value: ${{ steps.setup.outputs.action_start_time }}
+
   deployment-url:
-    description: The URL at which the preview has been deployed
-    value: ${{ steps.url.outputs.url }}
+    description: Deprecated, use `preview-url` instead.
+    value: ${{ steps.setup.outputs.preview_url }}
 
 runs:
   using: composite
   steps:
-    - name: Store environment variables
+    - name: Setup preview environment
+      id: setup
       env:
-        action: ${{ inputs.action }}
-        umbrella: ${{ inputs.umbrella-dir }}
-        pagesbase: ${{ inputs.pages-base-path }}
-        pr: ${{ github.event.number }}
-        actionref: ${{ github.action_ref }}
-        actionrepo: ${{ github.action_repository }}
-        customurl: ${{ inputs.custom-url }}
-        deployrepo: ${{ inputs.deploy-repository }}
+        deployment_action: ${{ inputs.action }}
+        umbrella_path: ${{ inputs.umbrella-dir }}
+        pages_base_url: ${{ inputs.pages-base-url }}
+        pages_base_path: ${{ inputs.pages-base-path }}
+        pr_number: ${{ github.event.number }}
+        github_action_ref: ${{ github.action_ref }}
+        github_action_repository: ${{ github.action_repository }}
+        deployment_repository: ${{ inputs.deploy-repository }}
         token: ${{ inputs.token }}
-      run: |
-        echo "action=$action" >> $GITHUB_ENV
-        echo "pr=$pr" >> $GITHUB_ENV
-
-        repo_org=$(echo "$deployrepo" | cut -d "/" -f 1)
-        repo_name=$(echo "$deployrepo" | cut -d "/" -f 2)
-
-        if [ ! -z "$customurl" ]; then
-          pagesurl="$customurl"
-        elif [ "${repo_org}.github.io" == "$repo_name" ]; then
-          pagesurl="${repo_org}.github.io"
-        else
-          pagesurl=$(echo "$deployrepo" | sed 's/\//.github.io\//')
-        fi
-
-        echo "pagesurl=$pagesurl" >> $GITHUB_ENV
-
-        targetdir="$umbrella/pr-$pr"
-        echo "targetdir=$targetdir" >> $GITHUB_ENV
-
-        pagespath=$("$GITHUB_ACTION_PATH/lib/remove-prefix-path.sh" -b "$pagesbase" -o "$targetdir")
-        if [ -n "$pagesbase" ] && [ "$("$GITHUB_ACTION_PATH/lib/remove-prefix-path.sh" -b "" -o "$targetdir")" = "$pagespath" ]; then
-          echo "::warning title=pages-base-path doesn't match::pages-base-path directory ($pagesbase) does not contain umbrella-dir ($umbrella). pages-base-path has been ignored."
-          pagespath=$targetdir
-        fi
-        echo "pagespath=$pagespath" >> $GITHUB_ENV
-
-        echo "emptydir=$(mktemp -d)" >> $GITHUB_ENV
-        echo "datetime=$(date '+%Y-%m-%d %H:%M %Z')" >> $GITHUB_ENV
-
-        echo "actionref=$actionref" >> $GITHUB_ENV
-        echo "actionrepo=$actionrepo" >> $GITHUB_ENV
-        echo "deployrepo=$deployrepo" >> $GITHUB_ENV
-        echo "token=$token" >> $GITHUB_ENV
-      shell: bash
-
-    - name: Determine action version
-      run: |
-        action_version=$("$GITHUB_ACTION_PATH/lib/find-current-git-tag.sh" -p $actionrepo -f $actionref)
-        echo "action_version=$action_version" >> "$GITHUB_ENV"
-      shell: bash
-
-    - name: Determine auto action
-      if: env.action == 'auto'
-      run: $GITHUB_ACTION_PATH/lib/determine-auto-action.sh
+        deprecated_custom_url: ${{ inputs.custom-url }}
+      run: $GITHUB_ACTION_PATH/lib/main.sh
       shell: bash
 
     - name: Deploy preview directory
-      if: env.action == 'deploy'
+      if: env.deployment_action == 'deploy'
       uses: JamesIves/github-pages-deploy-action@65b5dfd4f5bcd3a7403bbc2959c144256167464e # v4.5.0
       with:
-        token: ${{ env.token }}
-        repository-name: ${{ env.deployrepo }}
+        token: ${{ inputs.token }}
+        repository-name: ${{ inputs.deploy-repository }}
         branch: ${{ inputs.preview-branch }}
         folder: ${{ inputs.source-dir }}
-        target-folder: ${{ env.targetdir }}
-        commit-message: Deploy preview for PR ${{ env.pr }} 🛫
+        target-folder: ${{ env.preview_file_path }}
+        commit-message: Deploy preview for PR ${{ github.event.number }} 🛫
         force: false
 
-    - name: Expose deployment URL
-      id: url
-      run: echo "url=https://${{ env.pagesurl }}/${{ env.pagespath }}/"  >> $GITHUB_OUTPUT
-      shell: bash
-
     - name: Leave a comment after deployment
-      if: env.action == 'deploy' && env.deployment_status == 'success'
+      if: |
+        env.deployment_action == 'deploy' &&
+        env.deployment_status == 'success' &&
+        (inputs.comment == 'true' || inputs.comment == true)
       uses: marocchino/sticky-pull-request-comment@331f8f5b4215f0445d3c07b4967662a32a2d3e31 # v2.9.0
       with:
         header: pr-preview
-        message: "\
-          [PR Preview Action]\
-          (https://github.com/${{ env.actionrepo }})
-          ${{ env.action_version }}
-
+        message: |
+          [PR Preview Action](https://github.com/${{ env.action_repository }}) ${{ env.action_version }}
           :---:
-
-          :rocket: Deployed preview to
-          https://${{ env.pagesurl }}/${{ env.pagespath }}/
-
-          on branch [`${{ inputs.preview-branch }}`](\
-          ${{ github.server_url }}/${{ env.deployrepo }}\
-          /tree/${{ inputs.preview-branch }})
-          at ${{ env.datetime }}
-          "
+          | <p></p> :rocket: View preview at <br> ${{ env.preview_url }} <br><br>
+          | <h6>Built to branch [`${{ inputs.preview-branch }}`](${{ github.server_url }}/${{ inputs.deploy-repository }}/tree/${{ inputs.preview-branch }}) at ${{ env.action_start_time }}. <br> Preview will be ready when the [GitHub Pages deployment](${{ github.server_url }}/${{ inputs.deploy-repository }}/deployments) is complete. <br><br> </h6>
 
     - name: Remove preview directory
-      if: env.action == 'remove'
+      if: env.deployment_action == 'remove'
       uses: JamesIves/github-pages-deploy-action@65b5dfd4f5bcd3a7403bbc2959c144256167464e # v4.5.0
       with:
-        token: ${{ env.token }}
-        repository-name: ${{ env.deployrepo }}
+        token: ${{ inputs.token }}
+        repository-name: ${{ inputs.deploy-repository }}
         branch: ${{ inputs.preview-branch }}
-        folder: ${{ env.emptydir }}
-        target-folder: ${{ env.targetdir }}
-        commit-message: Remove preview for PR ${{ env.pr }} 🛬
+        folder: ${{ env.empty_dir_path }}
+        target-folder: ${{ env.preview_file_path }}
+        commit-message: Remove preview for PR ${{ github.event.number }} 🛬
         force: false
 
     - name: Leave a comment after removal
-      if: env.action == 'remove' && env.deployment_status == 'success'
+      if: |
+        env.deployment_action == 'remove' &&
+        env.deployment_status == 'success' &&
+        (inputs.comment == 'true' || inputs.comment == true)
       uses: marocchino/sticky-pull-request-comment@331f8f5b4215f0445d3c07b4967662a32a2d3e31 # v2.9.0
       with:
         header: pr-preview
-        message: "\
-          [PR Preview Action]\
-          (https://github.com/${{ env.actionrepo }})
-          ${{ env.action_version }}
-
+        message: |
+          [PR Preview Action](https://github.com/${{ env.action_repository }}) ${{ env.action_version }}
           :---:
-
           Preview removed because the pull request was closed.
-
-          ${{ env.datetime }}
-          "
+          ${{ env.action_start_time }}
