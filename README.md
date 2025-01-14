@@ -386,7 +386,7 @@ jobs:
           comment: false
 
       - uses: marocchino/sticky-pull-request-comment@v2
-        if: steps.preview-step.outputs.deployment_action == 'deploy' && env.deployment_status == 'success'
+        if: steps.preview-step.outputs.deployment-action == 'deploy' && env.deployment_status == 'success'
         with:
           header: pr-preview
           message: |
@@ -396,7 +396,7 @@ jobs:
             | <h6>Built to branch [`${{ env.PREVIEW_BRANCH }}`](${{ github.server_url }}/${{ github.repository }}/tree/${{ env.PREVIEW_BRANCH }}) at ${{ steps.preview-step.outputs.action-start-time }}. <br> Preview will be ready when the [GitHub Pages deployment](${{ github.server_url }}/${{ github.repository }}/deployments) is complete. <br><br> </h6>
 
       - uses: marocchino/sticky-pull-request-comment@v2
-        if: steps.preview-step.outputs.deployment_action == 'remove' && env.deployment_status == 'success'
+        if: steps.preview-step.outputs.deployment-action == 'remove' && env.deployment_status == 'success'
         with:
           header: pr-preview
           message: |
