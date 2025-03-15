@@ -116,6 +116,7 @@ runs:
         pages_base_url: ${{ inputs.pages-base-url }}
         pages_base_path: ${{ inputs.pages-base-path }}
         pr_number: ${{ github.event.number }}
+        build_commit: ${{ github.sha }}
         github_action_ref: ${{ github.action_ref }}
         github_action_repository: ${{ github.action_repository }}
         deployment_repository: ${{ inputs.deploy-repository }}
@@ -148,7 +149,7 @@ runs:
           [PR Preview Action](https://github.com/${{ env.action_repository }}) ${{ env.action_version }}
           :---:
           | <p></p> :rocket: View preview at <br> ${{ env.preview_url }} <br><br>
-          | <h6>Built to branch [`${{ inputs.preview-branch }}`](${{ github.server_url }}/${{ inputs.deploy-repository }}/tree/${{ inputs.preview-branch }}) at ${{ env.action_start_time }}. <br> Preview will be ready when the [GitHub Pages deployment](${{ github.server_url }}/${{ inputs.deploy-repository }}/deployments) is complete. <br><br> </h6>
+          | <h6>Built to branch [`${{ inputs.preview-branch }}`](${{ github.server_url }}/${{ inputs.deploy-repository }}/tree/${{ inputs.preview-branch }}) against ${{ env.build_commit }} at ${{ env.action_start_time }}. <br> Preview will be ready when the [GitHub Pages deployment](${{ github.server_url }}/${{ inputs.deploy-repository }}/deployments) is complete. <br><br> </h6>
 
     - name: Remove preview directory
       if: env.deployment_action == 'remove'
