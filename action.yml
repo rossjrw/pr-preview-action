@@ -77,6 +77,10 @@ inputs:
       all other events. `auto` is the default value.
     required: false
     default: auto
+  qr-code:
+    description: Whether to show a QR code in the preview comment for easy mobile access
+    required: false
+    default: false
 
 outputs:
   deployment-action:
@@ -136,6 +140,25 @@ runs:
         commit-message: Deploy preview for PR ${{ github.event.number }} 🛫
         force: false
 
+    - name: Generate QR Code
+      if: |
+        env.deployment_action == 'deploy' &&
+        env.deployment_status == 'success' &&
+        (inputs.qr-code == 'true' || inputs.qr-code == true)
+      id: qr
+      run: |
+        cd "$GITHUB_ACTION_PATH"
+        npm install
+        raw_qr=$(node lib/generate-qr.js "${{ env.preview_url }}")
+        {
+          echo 'qr_code<<EOFQR'
+          echo "<p></p> <details><summary>📱 Scan QR code to open on mobile</summary><br>"
+          echo "$raw_qr"
+          echo "</details><br>"
+          echo 'EOFQR'
+        } >> $GITHUB_OUTPUT
+      shell: bash
+
     - name: Leave a comment after deployment
       if: |
         env.deployment_action == 'deploy' &&
@@ -149,6 +172,7 @@ runs:
           :---:
           | <p></p> :rocket: View preview at <br> ${{ env.preview_url }} <br><br>
           | <h6>Built to branch [`${{ inputs.preview-branch }}`](${{ github.server_url }}/${{ inputs.deploy-repository }}/tree/${{ inputs.preview-branch }}) at ${{ env.action_start_time }}. <br> Preview will be ready when the [GitHub Pages deployment](${{ github.server_url }}/${{ inputs.deploy-repository }}/deployments) is complete. <br><br> </h6>
+          ${{ inputs.qr-code == 'true' && steps.qr.outputs.qr_code || '' }}
 
     - name: Remove preview directory
       if: env.deployment_action == 'remove'
