@@ -74,7 +74,7 @@ jobs:
   deploy-preview:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout # Required, even if you download an artifact instead of build from source
         uses: actions/checkout@v4
 
       - name: Install and Build
