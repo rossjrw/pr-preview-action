@@ -139,7 +139,7 @@ runs:
     - name: Leave a comment after deployment
       if: |
         env.deployment_action == 'deploy' &&
-        env.deployment_status == 'success' &&
+        (env.deployment_status == 'success' || env.deployment_status == 'skipped') &&
         (inputs.comment == 'true' || inputs.comment == true)
       uses: marocchino/sticky-pull-request-comment@67d0dec7b07ed060a405f9b2a64b8ab319fdd7db # v2.9.2
       with:
@@ -165,7 +165,7 @@ runs:
     - name: Leave a comment after removal
       if: |
         env.deployment_action == 'remove' &&
-        env.deployment_status == 'success' &&
+        (env.deployment_status == 'success' || env.deployment_status == 'skipped') &&
         (inputs.comment == 'true' || inputs.comment == true)
       uses: marocchino/sticky-pull-request-comment@67d0dec7b07ed060a405f9b2a64b8ab319fdd7db # v2.9.2
       with:
