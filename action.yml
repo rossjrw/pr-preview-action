@@ -53,7 +53,7 @@ inputs:
   custom-url:
     description: Custom pages URL
     required: false
-    default: ""
+    default: pr-preview
   action:
     description: >
       Determines what this action will do when it is executed. Supported
@@ -72,6 +72,10 @@ inputs:
       all other events. `auto` is the default value.
     required: false
     default: auto
+  custom-header:
+    description: Optional custom header for PR comments
+    required: false
+    default: ""
 
 outputs:
   deployment-url:
@@ -151,7 +155,7 @@ runs:
       if: env.action == 'deploy' && env.deployment_status == 'success'
       uses: marocchino/sticky-pull-request-comment@331f8f5b4215f0445d3c07b4967662a32a2d3e31 # v2.9.0
       with:
-        header: pr-preview
+        header: ${{ inputs.custom-header }}
         message: "\
           [PR Preview Action]\
           (${{ github.server_url }}/${{ env.actionrepo }})
@@ -185,7 +189,7 @@ runs:
       if: env.action == 'remove' && env.deployment_status == 'success'
       uses: marocchino/sticky-pull-request-comment@331f8f5b4215f0445d3c07b4967662a32a2d3e31 # v2.9.0
       with:
-        header: pr-preview
+        header: ${{ inputs.custom-header }}
         message: "\
           [PR Preview Action]\
           (${{ github.server_url }}/${{ env.actionrepo }})
