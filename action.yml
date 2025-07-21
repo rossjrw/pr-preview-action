@@ -76,6 +76,10 @@ inputs:
     description: Optional custom header for PR comments
     required: false
     default: ""
+  custom-message-suffix:
+    description: Optional string to append to the deployment comment
+    required: false
+    default: ""
 
 outputs:
   deployment-url:
@@ -165,6 +169,8 @@ runs:
 
           :rocket: Deployed preview to
           https://${{ env.pagesurl }}/${{ env.targetdir }}/
+          
+          ${{ inputs.custom-message-suffix }}
 
           on branch [`${{ inputs.preview-branch }}`](\
           ${{ github.server_url }}/${{ env.deployrepo }}\
