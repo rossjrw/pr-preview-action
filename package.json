@@ -1,6 +1,10 @@
 {
   "name": "pr-preview",
   "version": "0.0.0",
+  "type": "module",
+  "dependencies": {
+    "uqr": "^0.1.2"
+  },
   "devDependencies": {
     "prettier": "2.5.1",
     "prettier-plugin-sh": "^0.8.1"
