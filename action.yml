@@ -77,6 +77,18 @@ inputs:
       all other events. `auto` is the default value.
     required: false
     default: auto
+  deploy-commit-message:
+    description: >
+      Custom commit message for deploying the preview.
+      You can use GitHub context variables like `${{ github.event.number }}`.
+    required: false
+    default: Deploy preview for PR ${{ github.event.number }} 🛫
+  remove-commit-message:
+    description: >
+      Custom commit message for removing the preview.
+      You can use GitHub context variables like `${{ github.event.number }}`.
+    required: false
+    default: Remove preview for PR ${{ github.event.number }} 🛬
 
 outputs:
   deployment-action:
@@ -133,7 +145,7 @@ runs:
         branch: ${{ inputs.preview-branch }}
         folder: ${{ inputs.source-dir }}
         target-folder: ${{ env.preview_file_path }}
-        commit-message: Deploy preview for PR ${{ github.event.number }} 🛫
+        commit-message: ${{ inputs.deploy-commit-message }}
         force: false
 
     - name: Leave a comment after deployment
@@ -159,7 +171,7 @@ runs:
         branch: ${{ inputs.preview-branch }}
         folder: ${{ env.empty_dir_path }}
         target-folder: ${{ env.preview_file_path }}
-        commit-message: Remove preview for PR ${{ github.event.number }} 🛬
+        commit-message: ${{ inputs.remove-commit-message }}
         force: false
 
     - name: Leave a comment after removal
