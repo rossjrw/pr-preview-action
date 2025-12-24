@@ -43,8 +43,14 @@ inputs:
 
         required: false
         default: ${{ github.repository }}
+    wait-for-pages-deployment:
+        description: >
+            Whether to wait for GitHub Pages deployment before continuing, e.g. to ensure the preview URL is actually accessible when the sticky comment is posted.
+
+        required: false
+        default: "false"
     comment:
-        description: Whether to leave a sticky comment on the calling PR.
+        description: Whether to leave a sticky comment on the calling PR at the end of the workflow.
         required: false
         default: "true"
     deploy-commit-message:
@@ -102,6 +108,9 @@ outputs:
     action-start-time:
         description: The time that the action started in a readable format (UTC, depending on runner).
         value: ${{ steps.setup.outputs.action_start_time }}
+    deployed-commit-sha:
+        description: The commit SHA that was deployed to the preview branch.
+        value: ${{ steps.deployed-commit.outputs.deployed_commit_sha }}
 
     deployment-url:
         description: Deprecated, use `preview-url` instead.
@@ -126,6 +135,8 @@ runs:
           run: $GITHUB_ACTION_PATH/lib/main.sh
           shell: bash
 
+        # DEPLOYMENT
+
         - name: Deploy preview directory
           if: env.deployment_action == 'deploy'
           uses: JamesIves/github-pages-deploy-action@4a3abc783e1a24aeb44c16e869ad83caf6b4cc23 # v4.7.4
@@ -140,11 +151,31 @@ runs:
               git-config-name: ${{ inputs.git-config-name }}
               git-config-email: ${{ inputs.git-config-email }}
 
+        - name: Get commit SHA of preview deployment
+          id: deployed-commit
+          if: env.deployment_action == 'deploy'
+          env:
+              DEPLOY_REPO: ${{ inputs.deploy-repository }}
+              DEPLOY_BRANCH: ${{ inputs.preview-branch }}
+              DEPLOY_TOKEN: ${{ inputs.token }}
+          run: $GITHUB_ACTION_PATH/lib/get-deployed-commit.sh
+          shell: bash
+
+        - name: Wait for preview deployment on GitHub Pages
+          if: |
+              env.deployment_action == 'deploy' &&
+              (inputs.wait-for-pages-deployment == 'true' || inputs.wait-for-pages-deployment == true) &&
+              env.deployment_status == 'success'
+          run: |
+              source $GITHUB_ACTION_PATH/lib/wait-for-pages-deployment.sh
+              wait_for_pages_deployment "${{ inputs.deploy-repository }}" "${{ steps.deployed-commit.outputs.deployed_commit_sha }}" "${{ inputs.preview-branch }}" "${{ inputs.token }}"
+          shell: bash
+
         - name: Leave a comment after deployment
           if: |
               env.deployment_action == 'deploy' &&
-              (env.deployment_status == 'success' || env.deployment_status == 'skipped') &&
-              (inputs.comment == 'true' || inputs.comment == true)
+              (inputs.comment == 'true' || inputs.comment == true) &&
+              (env.deployment_status == 'success' || env.deployment_status == 'skipped')
           uses: marocchino/sticky-pull-request-comment@67d0dec7b07ed060a405f9b2a64b8ab319fdd7db # v2.9.2
           with:
               header: pr-preview
@@ -153,6 +184,8 @@ runs:
                   :---:
                   | <p></p> :rocket: View preview at <br> ${{ env.preview_url }} <br><br>
                   | <h6>Built to branch [`${{ inputs.preview-branch }}`](${{ github.server_url }}/${{ inputs.deploy-repository }}/tree/${{ inputs.preview-branch }}) at ${{ env.action_start_time }}. <br> Preview will be ready when the [GitHub Pages deployment](${{ github.server_url }}/${{ inputs.deploy-repository }}/deployments) is complete. <br><br> </h6>
+
+        # REMOVAL
 
         - name: Remove preview directory
           if: env.deployment_action == 'remove'
@@ -168,11 +201,31 @@ runs:
               git-config-name: ${{ inputs.git-config-name }}
               git-config-email: ${{ inputs.git-config-email }}
 
+        - name: Get commit SHA of preview removal
+          id: removed-commit
+          if: env.deployment_action == 'remove'
+          env:
+              DEPLOY_REPO: ${{ inputs.deploy-repository }}
+              DEPLOY_BRANCH: ${{ inputs.preview-branch }}
+              DEPLOY_TOKEN: ${{ inputs.token }}
+          run: $GITHUB_ACTION_PATH/lib/get-deployed-commit.sh
+          shell: bash
+
+        - name: Wait for preview removal on GitHub Pages
+          if: |
+              env.deployment_action == 'remove' &&
+              (inputs.wait-for-pages-deployment == 'true' || inputs.wait-for-pages-deployment == true) &&
+              env.deployment_status == 'success'
+          run: |
+              source $GITHUB_ACTION_PATH/lib/wait-for-pages-deployment.sh
+              wait_for_pages_deployment "${{ inputs.deploy-repository }}" "${{ steps.removed-commit.outputs.deployed_commit_sha }}" "${{ inputs.preview-branch }}" "${{ inputs.token }}"
+          shell: bash
+
         - name: Leave a comment after removal
           if: |
               env.deployment_action == 'remove' &&
-              (env.deployment_status == 'success' || env.deployment_status == 'skipped') &&
-              (inputs.comment == 'true' || inputs.comment == true)
+              (inputs.comment == 'true' || inputs.comment == true) &&
+              (env.deployment_status == 'success' || env.deployment_status == 'skipped')
           uses: marocchino/sticky-pull-request-comment@67d0dec7b07ed060a405f9b2a64b8ab319fdd7db # v2.9.2
           with:
               header: pr-preview

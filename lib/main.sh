@@ -1,4 +1,9 @@
 #!/usr/bin/env bash
+# shellcheck source-path=..
+
+source "$GITHUB_ACTION_PATH/lib/calculate-pages-base-url.sh"
+source "$GITHUB_ACTION_PATH/lib/remove-prefix-path.sh"
+source "$GITHUB_ACTION_PATH/lib/determine-auto-action.sh"
 
 declare deployment_action pr_number deployment_repository pages_base_url pages_base_path umbrella_path github_action_ref github_action_repository deprecated_custom_url
 
@@ -9,27 +14,20 @@ fi
 
 # If pages_base_url was not set by the user, try to guess
 if [ -z "$pages_base_url" ]; then
-    # Either .github.io or .github.io/repo
-    repo_org=$(echo "$deployment_repository" | cut -d "/" -f 1)
-    repo_name=$(echo "$deployment_repository" | cut -d "/" -f 2)
-    if [ "$repo_name" = "${repo_org}.github.io" ]; then
-        pages_base_url="${repo_org}.github.io"
-    else
-        pages_base_url=$(echo "$deployment_repository" | sed -e 's/\//.github.io\//')
-    fi
+    pages_base_url=$(calculate_pages_base_url "$deployment_repository")
 fi
 
 preview_file_path="$umbrella_path/pr-$pr_number"
 
-preview_url_path=$("$GITHUB_ACTION_PATH/lib/remove-prefix-path.sh" -b "$pages_base_path" -o "$preview_file_path")
-if [ -n "$pages_base_path" ] && [ "$("$GITHUB_ACTION_PATH/lib/remove-prefix-path.sh" -b "" -o "$preview_file_path")" = "$preview_url_path" ]; then
+preview_url_path=$(remove_prefix_path "$pages_base_path" "$preview_file_path")
+if [ -n "$pages_base_path" ] && [ "$(remove_prefix_path "" "$preview_file_path")" = "$preview_url_path" ]; then
     echo "::warning title=pages-base-path doesn't match::The pages-base-path directory ($pages_base_path) does not contain umbrella-dir ($umbrella_path). pages-base-path has been ignored. The value of umbrella-dir should start with the value of pages-base-path."
     preview_url_path=$preview_file_path
 fi
 
 if [ "$deployment_action" = "auto" ]; then
     echo >&2 "Determining auto action"
-    deployment_action=$("$GITHUB_ACTION_PATH/lib/determine-auto-action.sh")
+    deployment_action=$(determine_auto_action)
     echo >&2 "Auto action is $deployment_action"
 fi
 
