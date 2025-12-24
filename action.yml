@@ -53,6 +53,12 @@ inputs:
     description: Whether to leave a sticky comment on the calling PR.
     required: false
     default: "true"
+  git-config-name:
+    description: The git user.name to use for the deployment commit.
+    required: false
+  git-config-email:
+    description: The git user.email to use for the deployment commit.
+    required: false
 
   custom-url:
     description: Deprecated, use `pages-base-url` instead.
@@ -147,6 +153,8 @@ runs:
         target-folder: ${{ env.preview_file_path }}
         commit-message: ${{ inputs.deploy-commit-message }}
         force: false
+        git-config-name: ${{ inputs.git-config-name }}
+        git-config-email: ${{ inputs.git-config-email }}
 
     - name: Leave a comment after deployment
       if: |
@@ -173,6 +181,8 @@ runs:
         target-folder: ${{ env.preview_file_path }}
         commit-message: ${{ inputs.remove-commit-message }}
         force: false
+        git-config-name: ${{ inputs.git-config-name }}
+        git-config-email: ${{ inputs.git-config-email }}
 
     - name: Leave a comment after removal
       if: |

@@ -107,6 +107,16 @@ Input&nbsp;parameter | Description
 `deploy-commit-message` | Custom commit message for deploying the preview. <br> You can use GitHub context variables like `${{ github.event.number }}`. <br><br> Default: `Deploy preview for PR ${{ github.event.number }} 🛫`
 `remove-commit-message` | Custom commit message for removing the preview. <br> You can use GitHub context variables like `${{ github.event.number }}`. <br><br> Default: `Remove preview for PR ${{ github.event.number }} 🛬`
 
+<details>
+<summary><b>Extra parameters for controlling the commits</b></summary>
+
+| Input&nbsp;parameter | Description |
+| --- | --- |
+| `git-config-name` | The git user.name to use for the deployment commit. <br><br> Default: The user who created the `token` |
+| `git-config-email` | The git user.email to use for the deployment commit. <br><br> Default: The user who created the `token` |
+
+</details>
+
 ## Outputs
 
 Several output values are provided to use after this Action in your workflow. To use them, give this Action's step an `id` and reference the value with `${{ steps.<id>.outputs.<name> }}`, e.g.:
