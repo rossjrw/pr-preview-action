@@ -105,6 +105,16 @@ Input&nbsp;parameter | Description
 `token` | Authentication token for the preview deployment. <br> The default value works for non-fork pull requests to the same repository. For anything else, you will need a [Personal Access Token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token) with permission to access it, and [store it as a secret](https://docs.github.com/en/actions/security-guides/using-secrets-in-github-actions) in your repository. E.g. you might name that secret 'PREVIEW_TOKEN' and use it with `token: ${{ secrets.PREVIEW_TOKEN }}`. <br><br> Default: `${{ github.token }}`, which gives the action permission to deploy to the current repository.
 `action` <br> (enum) | Determines what this action will do when it is executed. Supported values: <br><br> <ul><li>`deploy` - create and deploy the preview, overwriting any existing preview in that location.</li><li>`remove` - remove the preview.</li><li>`auto` - determine whether to deploy or remove the preview based on [the emitted event](https://docs.github.com/en/developers/webhooks-and-events/webhooks/webhook-events-and-payloads#pull_request). If the event is `pull_request`, it will deploy the preview when the event type is `opened`, `reopened` and `synchronize`, and remove it on `closed` events. Does not do anything for other events or event types, even if you explicitly instruct the workflow to run on them.</li><li>`none` and all other values: does not do anything.</li></ul> Default: `auto`
 
+<details>
+<summary><b>Extra parameters for controlling the commits</b></summary>
+
+| Input&nbsp;parameter | Description |
+| --- | --- |
+| `git-config-name` | The git user.name to use for the deployment commit. <br><br> Default: The user who created the `token` |
+| `git-config-email` | The git user.email to use for the deployment commit. <br><br> Default: The user who created the `token` |
+
+</details>
+
 ## Outputs
 
 Several output values are provided to use after this Action in your workflow. To use them, give this Action's step an `id` and reference the value with `${{ steps.<id>.outputs.<name> }}`, e.g.:
