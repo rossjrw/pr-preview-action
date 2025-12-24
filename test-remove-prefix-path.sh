@@ -7,11 +7,11 @@ echo >&2 "$0: start"
 testscript=$(dirname "$0")/../lib/remove-prefix-path.sh
 
 assert() {
-  echo >&2 "$1" = "$2"
-  if [ "$1" != "$2" ]; then
-    echo >&2 "$0: fail"
-    exit 1
-  fi
+    echo >&2 "$1" = "$2"
+    if [ "$1" != "$2" ]; then
+        echo >&2 "$0: fail"
+        exit 1
+    fi
 }
 
 assert "$($testscript -b "" -o "")" ""
