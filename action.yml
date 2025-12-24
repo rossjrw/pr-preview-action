@@ -35,6 +35,12 @@ inputs:
         description: Directory containing files to deploy.
         required: false
         default: .
+    pr-number:
+        description: >
+            The PR number to use for the preview path. Defaults to the PR number from the GitHub event context. Override this for testing or when not triggered by a pull_request event.
+
+        required: false
+        default: ""
     deploy-repository:
         description: >
             The GitHub repository to deploy the preview to. This should be formatted like `<org name>/<repo name>`, e.g. `rossjrw/pr-preview-action`. Defaults to the current repository.
@@ -126,9 +132,9 @@ runs:
               umbrella_path: ${{ inputs.umbrella-dir }}
               pages_base_url: ${{ inputs.pages-base-url }}
               pages_base_path: ${{ inputs.pages-base-path }}
-              pr_number: ${{ github.event.number }}
-              github_action_ref: ${{ github.action_ref }}
-              github_action_repository: ${{ github.action_repository }}
+              pr_number: ${{ inputs.pr-number || github.event.number }}
+              github_action_ref: ${{ github.action_ref || github.ref }}
+              github_action_repository: ${{ github.action_repository || github.repository }}
               deployment_repository: ${{ inputs.deploy-repository }}
               token: ${{ inputs.token }}
               deprecated_custom_url: ${{ inputs.custom-url }}
