@@ -62,7 +62,7 @@ jobs:
               uses: actions/checkout@v4
 
             - name: Install and Build
-              if: github.event.action != 'closed' # You might want to skip the build if the PR has been closed
+              if: github.event.action != 'closed' # We don't need the build if we know the preview will be removed
               run: |
                   npm install
                   npm run build
@@ -85,7 +85,8 @@ The following input parameters are provided, which can be passed to the `with` p
 | `umbrella-dir` | Path to the directory to place previews in. <br> The umbrella directory is used to namespace previews from your main branch's deployment on GitHub Pages. <br><br> Default: `pr-preview` |
 | `pages-base-url` | Base URL to use when providing a link to the preview site. <br><br> Default: The pull request's target repository's default GitHub Pages URL (e.g. `rossjrw.github.io/pr-preview-action/`) |
 | `pages-base-path` | Path that GitHub Pages is being served from, as configured in your repository settings, e.g. `docs/`. When generating the preview URL path, this is removed from the beginning of the file path. <br><br> Default: `.` (repository root) |
-| `comment` <br> (boolean) | Whether to leave a [sticky comment](https://github.com/marocchino/sticky-pull-request-comment) on the PR after the preview is built.<br> The comment may be added before the preview finishes deploying. <br><br> Default: `true` |
+| `wait-for-pages-deployment` <br> (boolean) | Whether to wait for the GitHub Pages deployment to complete. When enabled, the action will poll the GitHub Deployments API and delay workflow completion until the Pages deployment finishes, e.g. to ensure the preview URL is accessible when the comment is posted. <br><br> Default: `false` (this will be `true` in a future version of this Action) |
+| `comment` <br> (boolean) | Whether to leave a [sticky comment](https://github.com/marocchino/sticky-pull-request-comment) on the PR after the preview is built.<br> The comment may be added before the preview finishes deploying unless `wait-for-pages-deployment` is enabled. <br><br> Default: `true` |
 | `token` | Authentication token for the preview deployment. <br> The default value works for non-fork pull requests to the same repository. For anything else, you will need a [Personal Access Token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token) with permission to access it, and [store it as a secret](https://docs.github.com/en/actions/security-guides/using-secrets-in-github-actions) in your repository. E.g. you might name that secret 'PREVIEW_TOKEN' and use it with `token: ${{ secrets.PREVIEW_TOKEN }}`. <br><br> Default: `${{ github.token }}`, which gives the action permission to deploy to the current repository. |
 | `action` <br> (enum) | Determines what this action will do when it is executed. Supported values: <br><br> <ul><li>`deploy` - create and deploy the preview, overwriting any existing preview in that location.</li><li>`remove` - remove the preview.</li><li>`auto` - determine whether to deploy or remove the preview based on [the emitted event](https://docs.github.com/en/developers/webhooks-and-events/webhooks/webhook-events-and-payloads#pull_request). If the event is `pull_request`, it will deploy the preview when the event type is `opened`, `reopened` and `synchronize`, and remove it on `closed` events. Does not do anything for other events or event types, even if you explicitly instruct the workflow to run on them.</li><li>`none` and all other values: does not do anything.</li></ul> Default: `auto` |
 
@@ -94,7 +95,7 @@ The following input parameters are provided, which can be passed to the `with` p
 
 | Input&nbsp;parameter | Description |
 | --- | --- |
-| `deploy-commit-message` | The commit message to use when adding/updating a preview. <br> You can use GitHub context variables like `${{ github.event.number }}`. <br><br> Default: `Deploy preview for PR ${{ github.event.number }} 🛫` |
+| `deploy-commit-message` | The commit message to use when adding/updating a preview. <br> **Note:** You can use certain [GitHub context variables](https://docs.github.com/en/actions/reference/workflows-and-actions/contexts). <br><br> Default: `Deploy preview for PR ${{ github.event.number }} 🛫` |
 | `remove-commit-message` | The commit message to use when removing a preview. <br> Note: If using `action` with a value of `"auto"`, you need to specify BOTH `deploy-commit-message` and `remove-commit-message`. <br><br> Default: `Remove preview for PR ${{ github.event.number }} 🛬` |
 | `git-config-name` | The git user.name to use for the deployment commit. <br><br> Default: The user who created the `token` |
 | `git-config-email` | The git user.email to use for the deployment commit. <br><br> Default: The user who created the `token` |
@@ -124,6 +125,7 @@ You could use these outputs and input parameter `comment: false` to write your o
 | `pages-base-url` | What this Action thinks the base URL of the GitHub Pages site is. |
 | `preview-url-path` | Path to the preview from the Pages base URL. |
 | `preview-url` | Full URL to the preview (`https://<pages-base-url>/<preview-url-path>/`). |
+| `deployed-commit-sha` | The SHA of the commit that was deployed to the preview branch. |
 | `action-version` | The full, exact version of this Action when it was run. |
 | `action-start-timestamp` | The time that the workflow step started as a Unix timestamp. |
 | `action-start-time` | The time that the workflow step started in a readable format (UTC, depending on runner). |
@@ -153,12 +155,12 @@ If you are using GitHub Actions to deploy your GitHub Pages sites (typically on 
     ```yml
     # .github/workflows/build-deploy-pages-site.yml
     steps:
-      ...
-      - uses: JamesIves/github-pages-deploy-action@v4
         ...
-        with:
-          clean-exclude: pr-preview/
+        - uses: JamesIves/github-pages-deploy-action@v4
           ...
+          with:
+              clean-exclude: pr-preview/
+              ...
     ```
 
     If you don't do this, your main deployment may delete all of your currently-existing PR previews.
@@ -172,12 +174,12 @@ If you are using GitHub Actions to deploy your GitHub Pages sites (typically on 
     ```yml
     # .github/workflows/build-deploy-pages-site.yml
     steps:
-      ...
-      - uses: JamesIves/github-pages-deploy-action@v4
         ...
-        with:
-          force: false
-          ...
+        - uses: JamesIves/github-pages-deploy-action@v4
+            ...
+            with:
+                force: false
+                ...
     ```
 
     This feature was introduced in v4.3.0 of the above Action.
@@ -222,6 +224,8 @@ jobs:
                   preview-branch: gh-pages
                   umbrella-dir: pr-preview
                   action: auto
+                  wait-for-pages-deployment: false
+                  comment: true
 ```
 
 ...and an accompanying main deployment workflow:
@@ -254,35 +258,35 @@ If your Pages site is built to `build/` and deployed from the `docs/` directory 
 ```yml
 # .github/workflows/preview.yml
 steps:
-  ...
-  - uses: rossjrw/pr-preview-action@v1
-    with:
-      source-dir: build
-      preview-branch: main
-      umbrella-dir: docs/pr-preview
-      pages-base-path: docs
+    ...
+    - uses: rossjrw/pr-preview-action@v1
+      with:
+          source-dir: build
+          preview-branch: main
+          umbrella-dir: docs/pr-preview
+          pages-base-path: docs
 ```
 
 You should definitely limit this workflow to run only on changes to directories other than `docs/`, otherwise this workflow will call itself recursively.
 
 ### Only remove previews for unmerged PRs
 
-Information from the context and conditionals can be used to make more complex decisions about what to do with previews; for example, removing only those associated with _unmerged_ PRs when they are closed:
+Information from the [context](https://docs.github.com/en/actions/reference/workflows-and-actions/contexts) and [conditionals](https://docs.github.com/en/actions/reference/workflows-and-actions/expressions) can be used to make more complex decisions about what to do with previews; for example, removing only those associated with _unmerged_ PRs when they are closed:
 
 ```yml
 # .github/workflows/preview.yml
 steps:
-  ...
-  - uses: rossjrw/pr-preview-action@v1
-    if: contains(['opened', 'reopened', 'synchronize'], github.event.action)
-    with:
-      source-dir: ./build/
-      action: deploy
-  - uses: rossjrw/pr-preview-action@v1
-    if: github.event.action == "closed" && !github.event.pull_request.merged
-    with:
-      source-dir: ./build/
-      action: remove
+    ...
+    - uses: rossjrw/pr-preview-action@v1
+      if: contains(['opened', 'reopened', 'synchronize'], github.event.action)
+      with:
+          source-dir: ./build/
+          action: deploy
+    - uses: rossjrw/pr-preview-action@v1
+      if: github.event.action == "closed" && !github.event.pull_request.merged
+      with:
+          source-dir: ./build/
+          action: remove
 ```
 
 ### Permanent previews
@@ -310,9 +314,21 @@ jobs:
                   action: deploy
 ```
 
+### Wait for GitHub Pages deployment to complete
+
+By default, this action starts a deployment to the target branch and leaves a comment immediately, but GitHub Pages may take 30-60 seconds to build and deploy your site. This can result in comments with preview links that don't work yet.
+
+Set `wait-for-deployment: true` to make the action automatically wait for Pages deployment before posting the comment:
+
+```yml
+- uses: rossjrw/pr-preview-action@v1
+  with:
+      wait-for-pages-deployment: true
+```
+
 ### Customise the sticky comment
 
-You can use `id`, `with: comment: false`, the output values and [context variables](https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/accessing-contextual-information-about-workflow-runs) to construct your own comment to be left on the PR. This example recreates this Action's default comment (complete with HTML spacing jank), but you could change it however you like, use a different commenting Action from the marketplace, etc.
+You can use `id`, `with: comment: false`, the output values and [context variables](https://docs.github.com/en/actions/reference/workflows-and-actions/contexts) to construct your own comment to be left on the PR. This example recreates this Action's default comment (complete with HTML spacing jank), but you could change it however you like, use a different commenting Action from the marketplace, etc.
 
 ```yml
 # .github/workflows/preview.yml
