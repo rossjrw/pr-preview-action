@@ -53,6 +53,14 @@ inputs:
     description: Whether to leave a sticky comment on the calling PR.
     required: false
     default: "true"
+  deploy-commit-message:
+    description: The commit message to use when adding/updating a preview.
+    required: false
+    default: Deploy preview for PR ${{ github.event.number }} 🛫
+  remove-commit-message:
+    description: The commit message to use when removing a preview.
+    required: false
+    default: Remove preview for PR ${{ github.event.number }} 🛬
   git-config-name:
     description: The git user.name to use for the deployment commit.
     required: false
@@ -83,18 +91,6 @@ inputs:
       all other events. `auto` is the default value.
     required: false
     default: auto
-  deploy-commit-message:
-    description: >
-      Custom commit message for deploying the preview.
-      You can use GitHub context variables like `${{ github.event.number }}`.
-    required: false
-    default: Deploy preview for PR ${{ github.event.number }} 🛫
-  remove-commit-message:
-    description: >
-      Custom commit message for removing the preview.
-      You can use GitHub context variables like `${{ github.event.number }}`.
-    required: false
-    default: Remove preview for PR ${{ github.event.number }} 🛬
 
 outputs:
   deployment-action:
