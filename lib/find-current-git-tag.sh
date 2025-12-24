@@ -1,24 +1,24 @@
 #!/usr/bin/env bash
 
 help() {
-  echo ""
-  echo "Usage: $0 -p github_repository -f git_ref"
-  echo -e "\t-p GitHub repository to clone, format: owner/repo"
-  echo -e "\t-f Reference of repository to clone"
-  exit 1
+    echo ""
+    echo "Usage: $0 -p github_repository -f git_ref"
+    echo -e "\t-p GitHub repository to clone, format: owner/repo"
+    echo -e "\t-f Reference of repository to clone"
+    exit 1
 } >&2
 
 while getopts "p:f:" opt; do
-  case "$opt" in
-  p) github_repository="$OPTARG" ;;
-  f) git_ref="$OPTARG" ;;
-  ?) help ;;
-  esac
+    case "$opt" in
+        p) github_repository="$OPTARG" ;;
+        f) git_ref="$OPTARG" ;;
+        ?) help ;;
+    esac
 done
 
 if [ -z "$github_repository" ] || [ -z "$git_ref" ]; then
-  echo >&2 "some parameters are empty"
-  help
+    echo >&2 "some parameters are empty"
+    help
 fi
 
 echo >&2 "Determining Git tag for $github_repository/$git_ref"

@@ -1,14 +1,14 @@
 name: Run tests
 on: push
 jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Run tests
-        run: |
-          set -e
-          for testscript in test/test-*.sh; do
-            bash $testscript
-          done
+    test:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+            - name: Run tests
+              run: |
+                  set -e
+                  for testscript in test/test-*.sh; do
+                    bash $testscript
+                  done

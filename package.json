@@ -1,8 +1,8 @@
 {
-  "name": "pr-preview",
-  "version": "0.0.0",
-  "devDependencies": {
-    "prettier": "2.5.1",
-    "prettier-plugin-sh": "^0.8.1"
-  }
+    "name": "pr-preview",
+    "version": "0.0.0",
+    "devDependencies": {
+        "prettier": "2.5.1",
+        "prettier-plugin-sh": "^0.8.1"
+    }
 }

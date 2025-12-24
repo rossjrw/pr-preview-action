@@ -1,195 +1,183 @@
 name: Deploy PR Preview
 author: Ross Williams
 description: >
-  Deploy a pull request preview to GitHub Pages, similar to Vercel and
-  Netlify.
+    Deploy a pull request preview to GitHub Pages, similar to Vercel and Netlify.
+
 
 branding:
-  icon: git-pull-request
-  color: yellow
+    icon: git-pull-request
+    color: yellow
 
 inputs:
-  token:
-    description: >
-      The token to use for the deployment.
-      Default is GITHUB_TOKEN in the current repository.
-      If you need more permissions for things such as deploying to another
-      repository, you can add a Personal Access Token (PAT).
-    required: false
-    default: ${{ github.token }}
-  preview-branch:
-    description: Branch on which the previews will be deployed.
-    required: false
-    default: gh-pages
-  umbrella-dir:
-    description: Path to the directory containing all previews.
-    required: false
-    default: pr-preview
-  pages-base-url:
-    description: URL of the repo's GitHub Pages site.
-    required: false
-    default: ""
-  pages-base-path:
-    description: Path that GitHub Pages is served from.
-    required: false
-    default: ""
-  source-dir:
-    description: Directory containing files to deploy.
-    required: false
-    default: .
-  deploy-repository:
-    description: >
-      The GitHub repository to deploy the preview to.
-      This should be formatted like `<org name>/<repo name>`, e.g.
-      `rossjrw/pr-preview-action`.
-      Defaults to the current repository.
+    token:
+        description: >
+            The token to use for the deployment. Default is GITHUB_TOKEN in the current repository. If you need more permissions for things such as deploying to another repository, you can add a Personal Access Token (PAT).
 
-      You will need to add a Personal Access Token (PAT) in the `token` input
-      in order to allow the action running in one repository to make changes
-      to another repository.
-    required: false
-    default: ${{ github.repository }}
-  comment:
-    description: Whether to leave a sticky comment on the calling PR.
-    required: false
-    default: "true"
-  deploy-commit-message:
-    description: The commit message to use when adding/updating a preview.
-    required: false
-    default: Deploy preview for PR ${{ github.event.number }} 🛫
-  remove-commit-message:
-    description: The commit message to use when removing a preview.
-    required: false
-    default: Remove preview for PR ${{ github.event.number }} 🛬
-  git-config-name:
-    description: The git user.name to use for the deployment commit.
-    required: false
-  git-config-email:
-    description: The git user.email to use for the deployment commit.
-    required: false
+        required: false
+        default: ${{ github.token }}
+    preview-branch:
+        description: Branch on which the previews will be deployed.
+        required: false
+        default: gh-pages
+    umbrella-dir:
+        description: Path to the directory containing all previews.
+        required: false
+        default: pr-preview
+    pages-base-url:
+        description: URL of the repo's GitHub Pages site.
+        required: false
+        default: ""
+    pages-base-path:
+        description: Path that GitHub Pages is served from.
+        required: false
+        default: ""
+    source-dir:
+        description: Directory containing files to deploy.
+        required: false
+        default: .
+    deploy-repository:
+        description: >
+            The GitHub repository to deploy the preview to. This should be formatted like `<org name>/<repo name>`, e.g. `rossjrw/pr-preview-action`. Defaults to the current repository.
+            
+            You will need to add a Personal Access Token (PAT) in the `token` input in order to allow the action running in one repository to make changes to another repository.
 
-  custom-url:
-    description: Deprecated, use `pages-base-url` instead.
-    deprecationMessage: Use `pages-base-url` instead.
-    required: false
-    default: ""
-  action:
-    description: >
-      Determines what this action will do when it is executed. Supported
-      values: `deploy`, `remove`, `auto` (default).
+        required: false
+        default: ${{ github.repository }}
+    comment:
+        description: Whether to leave a sticky comment on the calling PR.
+        required: false
+        default: "true"
+    deploy-commit-message:
+        description: The commit message to use when adding/updating a preview.
+        required: false
+        default: Deploy preview for PR ${{ github.event.number }} 🛫
+    remove-commit-message:
+        description: The commit message to use when removing a preview.
+        required: false
+        default: Remove preview for PR ${{ github.event.number }} 🛬
+    git-config-name:
+        description: The git user.name to use for the deployment commit.
+        required: false
+    git-config-email:
+        description: The git user.email to use for the deployment commit.
+        required: false
 
-      If set to `deploy`, will attempt to deploy the preview and overwrite
-      any existing preview in that location.
+    custom-url:
+        description: Deprecated, use `pages-base-url` instead.
+        deprecationMessage: Use `pages-base-url` instead.
+        required: false
+        default: ""
+    action:
+        description: >
+            Determines what this action will do when it is executed. Supported values: `deploy`, `remove`, `auto` (default).
+            
+            If set to `deploy`, will attempt to deploy the preview and overwrite any existing preview in that location.
+            
+            If set to `remove`, will attempt to remove the preview in that location.
+            
+            If set to `auto`, the action will try to determine whether to deploy or remove the preview. It will deploy the preview on `pull_request.types.synchronize` and `.opened` events, and remove it on `pull_request.types.closed` events. It will not do anything for all other events. `auto` is the default value.
 
-      If set to `remove`, will attempt to remove the preview in that
-      location.
-
-      If set to `auto`, the action will try to determine whether to deploy
-      or remove the preview. It will deploy the preview on
-      `pull_request.types.synchronize` and `.opened` events, and remove it
-      on `pull_request.types.closed` events. It will not do anything for
-      all other events. `auto` is the default value.
-    required: false
-    default: auto
+        required: false
+        default: auto
 
 outputs:
-  deployment-action:
-    description: Resolved value of the 'action' input parameter (deploy, remove, none).
-    value: ${{ steps.setup.outputs.deployment_action }}
-  pages-base-url:
-    description: What this Action thinks the base URL of the GitHub Pages site is.
-    value: ${{ steps.setup.outputs.pages_base_url }}
-  preview-url-path:
-    description: Path to the preview from the Pages base URL.
-    value: ${{ steps.setup.outputs.preview_url_path }}
-  preview-url:
-    description: Full URL to the preview (https://[pages-base-url]/[preview-url-path]/).
-    value: ${{ steps.setup.outputs.preview_url }}
-  action-version:
-    description: The version of this Action when it was run.
-    value: ${{ steps.setup.outputs.action_version }}
-  action-start-timestamp:
-    description: The Unix timestamp that the action started.
-    value: ${{ steps.setup.outputs.action_start_timestamp }}
-  action-start-time:
-    description: The time that the action started in a readable format (UTC, depending on runner).
-    value: ${{ steps.setup.outputs.action_start_time }}
+    deployment-action:
+        description: Resolved value of the 'action' input parameter (deploy, remove, none).
+        value: ${{ steps.setup.outputs.deployment_action }}
+    pages-base-url:
+        description: What this Action thinks the base URL of the GitHub Pages site is.
+        value: ${{ steps.setup.outputs.pages_base_url }}
+    preview-url-path:
+        description: Path to the preview from the Pages base URL.
+        value: ${{ steps.setup.outputs.preview_url_path }}
+    preview-url:
+        description: Full URL to the preview (https://[pages-base-url]/[preview-url-path]/).
+        value: ${{ steps.setup.outputs.preview_url }}
+    action-version:
+        description: The version of this Action when it was run.
+        value: ${{ steps.setup.outputs.action_version }}
+    action-start-timestamp:
+        description: The Unix timestamp that the action started.
+        value: ${{ steps.setup.outputs.action_start_timestamp }}
+    action-start-time:
+        description: The time that the action started in a readable format (UTC, depending on runner).
+        value: ${{ steps.setup.outputs.action_start_time }}
 
-  deployment-url:
-    description: Deprecated, use `preview-url` instead.
-    value: ${{ steps.setup.outputs.preview_url }}
+    deployment-url:
+        description: Deprecated, use `preview-url` instead.
+        value: ${{ steps.setup.outputs.preview_url }}
 
 runs:
-  using: composite
-  steps:
-    - name: Setup preview environment
-      id: setup
-      env:
-        deployment_action: ${{ inputs.action }}
-        umbrella_path: ${{ inputs.umbrella-dir }}
-        pages_base_url: ${{ inputs.pages-base-url }}
-        pages_base_path: ${{ inputs.pages-base-path }}
-        pr_number: ${{ github.event.number }}
-        github_action_ref: ${{ github.action_ref }}
-        github_action_repository: ${{ github.action_repository }}
-        deployment_repository: ${{ inputs.deploy-repository }}
-        token: ${{ inputs.token }}
-        deprecated_custom_url: ${{ inputs.custom-url }}
-      run: $GITHUB_ACTION_PATH/lib/main.sh
-      shell: bash
+    using: composite
+    steps:
+        - name: Setup preview environment
+          id: setup
+          env:
+              deployment_action: ${{ inputs.action }}
+              umbrella_path: ${{ inputs.umbrella-dir }}
+              pages_base_url: ${{ inputs.pages-base-url }}
+              pages_base_path: ${{ inputs.pages-base-path }}
+              pr_number: ${{ github.event.number }}
+              github_action_ref: ${{ github.action_ref }}
+              github_action_repository: ${{ github.action_repository }}
+              deployment_repository: ${{ inputs.deploy-repository }}
+              token: ${{ inputs.token }}
+              deprecated_custom_url: ${{ inputs.custom-url }}
+          run: $GITHUB_ACTION_PATH/lib/main.sh
+          shell: bash
 
-    - name: Deploy preview directory
-      if: env.deployment_action == 'deploy'
-      uses: JamesIves/github-pages-deploy-action@4a3abc783e1a24aeb44c16e869ad83caf6b4cc23 # v4.7.4
-      with:
-        token: ${{ inputs.token }}
-        repository-name: ${{ inputs.deploy-repository }}
-        branch: ${{ inputs.preview-branch }}
-        folder: ${{ inputs.source-dir }}
-        target-folder: ${{ env.preview_file_path }}
-        commit-message: ${{ inputs.deploy-commit-message }}
-        force: false
-        git-config-name: ${{ inputs.git-config-name }}
-        git-config-email: ${{ inputs.git-config-email }}
+        - name: Deploy preview directory
+          if: env.deployment_action == 'deploy'
+          uses: JamesIves/github-pages-deploy-action@4a3abc783e1a24aeb44c16e869ad83caf6b4cc23 # v4.7.4
+          with:
+              token: ${{ inputs.token }}
+              repository-name: ${{ inputs.deploy-repository }}
+              branch: ${{ inputs.preview-branch }}
+              folder: ${{ inputs.source-dir }}
+              target-folder: ${{ env.preview_file_path }}
+              commit-message: ${{ inputs.deploy-commit-message }}
+              force: false
+              git-config-name: ${{ inputs.git-config-name }}
+              git-config-email: ${{ inputs.git-config-email }}
 
-    - name: Leave a comment after deployment
-      if: |
-        env.deployment_action == 'deploy' &&
-        (env.deployment_status == 'success' || env.deployment_status == 'skipped') &&
-        (inputs.comment == 'true' || inputs.comment == true)
-      uses: marocchino/sticky-pull-request-comment@67d0dec7b07ed060a405f9b2a64b8ab319fdd7db # v2.9.2
-      with:
-        header: pr-preview
-        message: |
-          [PR Preview Action](https://github.com/${{ env.action_repository }}) ${{ env.action_version }}
-          :---:
-          | <p></p> :rocket: View preview at <br> ${{ env.preview_url }} <br><br>
-          | <h6>Built to branch [`${{ inputs.preview-branch }}`](${{ github.server_url }}/${{ inputs.deploy-repository }}/tree/${{ inputs.preview-branch }}) at ${{ env.action_start_time }}. <br> Preview will be ready when the [GitHub Pages deployment](${{ github.server_url }}/${{ inputs.deploy-repository }}/deployments) is complete. <br><br> </h6>
+        - name: Leave a comment after deployment
+          if: |
+              env.deployment_action == 'deploy' &&
+              (env.deployment_status == 'success' || env.deployment_status == 'skipped') &&
+              (inputs.comment == 'true' || inputs.comment == true)
+          uses: marocchino/sticky-pull-request-comment@67d0dec7b07ed060a405f9b2a64b8ab319fdd7db # v2.9.2
+          with:
+              header: pr-preview
+              message: |
+                  [PR Preview Action](https://github.com/${{ env.action_repository }}) ${{ env.action_version }}
+                  :---:
+                  | <p></p> :rocket: View preview at <br> ${{ env.preview_url }} <br><br>
+                  | <h6>Built to branch [`${{ inputs.preview-branch }}`](${{ github.server_url }}/${{ inputs.deploy-repository }}/tree/${{ inputs.preview-branch }}) at ${{ env.action_start_time }}. <br> Preview will be ready when the [GitHub Pages deployment](${{ github.server_url }}/${{ inputs.deploy-repository }}/deployments) is complete. <br><br> </h6>
 
-    - name: Remove preview directory
-      if: env.deployment_action == 'remove'
-      uses: JamesIves/github-pages-deploy-action@4a3abc783e1a24aeb44c16e869ad83caf6b4cc23 # v4.7.4
-      with:
-        token: ${{ inputs.token }}
-        repository-name: ${{ inputs.deploy-repository }}
-        branch: ${{ inputs.preview-branch }}
-        folder: ${{ env.empty_dir_path }}
-        target-folder: ${{ env.preview_file_path }}
-        commit-message: ${{ inputs.remove-commit-message }}
-        force: false
-        git-config-name: ${{ inputs.git-config-name }}
-        git-config-email: ${{ inputs.git-config-email }}
+        - name: Remove preview directory
+          if: env.deployment_action == 'remove'
+          uses: JamesIves/github-pages-deploy-action@4a3abc783e1a24aeb44c16e869ad83caf6b4cc23 # v4.7.4
+          with:
+              token: ${{ inputs.token }}
+              repository-name: ${{ inputs.deploy-repository }}
+              branch: ${{ inputs.preview-branch }}
+              folder: ${{ env.empty_dir_path }}
+              target-folder: ${{ env.preview_file_path }}
+              commit-message: ${{ inputs.remove-commit-message }}
+              force: false
+              git-config-name: ${{ inputs.git-config-name }}
+              git-config-email: ${{ inputs.git-config-email }}
 
-    - name: Leave a comment after removal
-      if: |
-        env.deployment_action == 'remove' &&
-        (env.deployment_status == 'success' || env.deployment_status == 'skipped') &&
-        (inputs.comment == 'true' || inputs.comment == true)
-      uses: marocchino/sticky-pull-request-comment@67d0dec7b07ed060a405f9b2a64b8ab319fdd7db # v2.9.2
-      with:
-        header: pr-preview
-        message: |
-          [PR Preview Action](https://github.com/${{ env.action_repository }}) ${{ env.action_version }}
-          :---:
-          Preview removed because the pull request was closed.
-          ${{ env.action_start_time }}
+        - name: Leave a comment after removal
+          if: |
+              env.deployment_action == 'remove' &&
+              (env.deployment_status == 'success' || env.deployment_status == 'skipped') &&
+              (inputs.comment == 'true' || inputs.comment == true)
+          uses: marocchino/sticky-pull-request-comment@67d0dec7b07ed060a405f9b2a64b8ab319fdd7db # v2.9.2
+          with:
+              header: pr-preview
+              message: |
+                  [PR Preview Action](https://github.com/${{ env.action_repository }}) ${{ env.action_version }}
+                  :---:
+                  Preview removed because the pull request was closed.
+                  ${{ env.action_start_time }}
