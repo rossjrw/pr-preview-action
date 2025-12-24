@@ -110,6 +110,8 @@ Input&nbsp;parameter | Description
 
 | Input&nbsp;parameter | Description |
 | --- | --- |
+| `deploy-commit-message` | The commit message to use when adding/updating a preview. <br> You can use GitHub context variables like `${{ github.event.number }}`. <br><br> Default: `Deploy preview for PR ${{ github.event.number }} 🛫` |
+| `remove-commit-message` | The commit message to use when removing a preview. <br> Note: If using `action` with a value of `"auto"`, you need to specify BOTH `deploy-commit-message` and `remove-commit-message`. <br><br> Default: `Remove preview for PR ${{ github.event.number }} 🛬` |
 | `git-config-name` | The git user.name to use for the deployment commit. <br><br> Default: The user who created the `token` |
 | `git-config-email` | The git user.email to use for the deployment commit. <br><br> Default: The user who created the `token` |
 

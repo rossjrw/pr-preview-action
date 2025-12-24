@@ -53,6 +53,14 @@ inputs:
     description: Whether to leave a sticky comment on the calling PR.
     required: false
     default: "true"
+  deploy-commit-message:
+    description: The commit message to use when adding/updating a preview.
+    required: false
+    default: Deploy preview for PR ${{ github.event.number }} 🛫
+  remove-commit-message:
+    description: The commit message to use when removing a preview.
+    required: false
+    default: Remove preview for PR ${{ github.event.number }} 🛬
   git-config-name:
     description: The git user.name to use for the deployment commit.
     required: false
@@ -139,7 +147,7 @@ runs:
         branch: ${{ inputs.preview-branch }}
         folder: ${{ inputs.source-dir }}
         target-folder: ${{ env.preview_file_path }}
-        commit-message: Deploy preview for PR ${{ github.event.number }} 🛫
+        commit-message: ${{ inputs.deploy-commit-message }}
         force: false
         git-config-name: ${{ inputs.git-config-name }}
         git-config-email: ${{ inputs.git-config-email }}
@@ -167,7 +175,7 @@ runs:
         branch: ${{ inputs.preview-branch }}
         folder: ${{ env.empty_dir_path }}
         target-folder: ${{ env.preview_file_path }}
-        commit-message: Remove preview for PR ${{ github.event.number }} 🛬
+        commit-message: ${{ inputs.remove-commit-message }}
         force: false
         git-config-name: ${{ inputs.git-config-name }}
         git-config-email: ${{ inputs.git-config-email }}
