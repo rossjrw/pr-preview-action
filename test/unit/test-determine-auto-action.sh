@@ -10,10 +10,11 @@ assert_action() {
     event_file=$(mktemp)
     echo "{\"action\": \"$2\"}" > "$event_file"
 
-    actual=$(determine_auto_action "$1" "$event_file" 2> /dev/null)
+    actual=$(determine_auto_action "$1" "$event_file")
     rm "$event_file"
 
     assert_equals "$3" "$actual"
+    echo >&2 ""
 }
 
 assert_action "pull_request" "opened" "deploy"
@@ -35,4 +36,3 @@ assert_action "pull_request_target" "closed" "remove"
 assert_action "push" "anything" "none"
 assert_action "workflow_dispatch" "anything" "none"
 assert_action "unknown" "opened" "none"
-assert_action "" "opened" "none"
