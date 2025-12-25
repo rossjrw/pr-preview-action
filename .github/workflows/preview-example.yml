@@ -17,6 +17,6 @@ jobs:
               uses: actions/checkout@v4
 
             - name: Deploy preview
-              uses: rossjrw/pr-preview-action@v1
+              uses: ./
               with:
-                  source-dir: test
+                  source-dir: test/fixtures/sample
