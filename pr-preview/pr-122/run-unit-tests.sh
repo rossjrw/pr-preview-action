@@ -20,6 +20,8 @@ for testscript in test/unit/test-*.sh; do
             failed_tests+=("$test_name")
             echo "✗ $test_name"
         fi
+
+        echo ""
     fi
 done
 

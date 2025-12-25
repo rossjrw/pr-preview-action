@@ -9,6 +9,8 @@ RESET='\033[0m'
 assert_equals() {
     local expected="$1"
     local actual="$2"
+    echo >&2 "assert: '$expected'"
+
     if [ "$expected" != "$actual" ]; then
         echo -e "${RED}FAIL: expected='$expected', actual='$actual'${RESET}" >&2
         return 1
@@ -20,6 +22,7 @@ assert_contains() {
     local haystack="$1"
     local needle="$2"
     local message="${3:-String should contain substring}"
+    echo >&2 "assert_contains: haystack='${haystack:0:100}...', needle='$needle', message='$message'"
 
     if [[ "$haystack" == *"$needle"* ]]; then
         echo -e "${GREEN}PASS: $message${RESET}" >&2
@@ -33,6 +36,7 @@ assert_contains() {
 assert_file_exists() {
     local file="$1"
     local message="${2:-File should exist: $file}"
+    echo >&2 "assert_file_exists: file='$file', message='$message'"
 
     if [ -f "$file" ]; then
         echo -e "${GREEN}PASS: $message${RESET}" >&2
@@ -47,6 +51,7 @@ assert_file_contains() {
     local file="$1"
     local needle="$2"
     local message="${3:-File should contain: $needle}"
+    echo >&2 "assert_file_contains: file='$file', needle='$needle', message='$message'"
 
     if [ ! -f "$file" ]; then
         echo -e "${RED}FAIL: File does not exist: $file${RESET}" >&2
@@ -60,6 +65,7 @@ assert_file_contains() {
 assert_dir_exists() {
     local dir="$1"
     local message="${2:-Directory should exist: $dir}"
+    echo >&2 "assert_dir_exists: dir='$dir', message='$message'"
 
     if [ -d "$dir" ]; then
         echo -e "${GREEN}PASS: $message${RESET}" >&2
@@ -76,6 +82,7 @@ assert_url_ok() {
     local message="${2:-URL should return 200}"
     local max_retries="${3:-6}"
     local retry_delay="${4:-5}"
+    echo >&2 "assert_url_ok: url='$url', message='$message', max_retries=$max_retries, retry_delay=$retry_delay"
 
     for ((i = 1; i <= max_retries; i++)); do
         status=$(curl -s -o /dev/null -w "%{http_code}" "$url" 2> /dev/null || echo "000")
@@ -91,6 +98,7 @@ assert_url_contains() {
     local url="$1"
     local needle="$2"
     local message="${3:-URL should contain: $needle}"
+    echo >&2 "assert_url_contains: url='$url', needle='$needle', message='$message'"
 
     content=$(curl -s "$url" 2> /dev/null || echo "")
     [ -n "$content" ] || {
@@ -105,6 +113,7 @@ assert_url_not_found() {
     local message="${2:-URL should return 404}"
     local max_retries="${3:-6}"
     local retry_delay="${4:-3}"
+    echo >&2 "assert_url_not_found: url='$url', message='$message', max_retries=$max_retries, retry_delay=$retry_delay"
 
     for ((i = 1; i <= max_retries; i++)); do
         status=$(curl -s -o /dev/null -w "%{http_code}" "$url" 2> /dev/null || echo "000")
