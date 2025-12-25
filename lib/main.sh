@@ -27,7 +27,7 @@ fi
 
 if [ "$deployment_action" = "auto" ]; then
     echo >&2 "Determining auto action"
-    deployment_action=$(determine_auto_action)
+    deployment_action=$(determine_auto_action "$GITHUB_EVENT_NAME" "$GITHUB_EVENT_PATH")
     echo >&2 "Auto action is $deployment_action"
 fi
 

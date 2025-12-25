@@ -1,11 +1,10 @@
 #!/usr/bin/env bash
 
 # Determine deployment action based on GitHub event
-# Usage: determine_auto_action "$GITHUB_EVENT_NAME" "$GITHUB_EVENT_PATH"
 # Returns: "deploy", "remove", or "none"
 determine_auto_action() {
-    local event_name="${1:-$GITHUB_EVENT_NAME}"
-    local event_path="${2:-$GITHUB_EVENT_PATH}"
+    local event_name="${1:?missing event_name}"
+    local event_path="${2:?missing event_path}"
 
     case $event_name in
         "pull_request" | "pull_request_target")
