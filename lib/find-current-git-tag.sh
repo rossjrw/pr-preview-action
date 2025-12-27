@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -euo pipefail
+
 help() {
     echo ""
     echo "Usage: $0 -p github_repository -f git_ref"
@@ -21,12 +23,26 @@ if [ -z "$github_repository" ] || [ -z "$git_ref" ]; then
     help
 fi
 
-echo >&2 "Determining Git tag for $github_repository/$git_ref"
+echo >&2 "Determining Git tag for $github_repository@$git_ref"
 
-echo >&2 "Cloning repository $github_repository at ref $git_ref"
-git clone --bare "https://github.com/$github_repository" bare_pr_preview
-
-cd bare_pr_preview || exit 1
+case $git_ref in
+    refs/pull/*)
+        # If the ref is a github virtual pull request merge, this is not a valid git ref
+        # Although this script is meant to be portable, action_ref being a PR merge can only happen for PRs to the action repo - in which case it is already checked out
+        echo >&2 "Assuming that's *this* repository..."
+        if eval "$(git rev-parse --is-shallow-repository)"; then
+            git fetch --prune --unshallow
+        fi
+        git_ref=HEAD
+        ;;
+    *)
+        echo >&2 "Cloning repository $github_repository"
+        clone_dir="$(mktemp -d)"
+        trap 'rm -rf "$clone_dir"' EXIT
+        git clone --bare "https://github.com/$github_repository" "$clone_dir"
+        cd "$clone_dir"
+        ;;
+esac
 
 action_version=$(git describe --tags --match "v*.*.*" "$git_ref" || git describe --tags "$git_ref" || git rev-parse HEAD)
 
