@@ -177,19 +177,39 @@ runs:
               wait_for_pages_deployment "${{ inputs.deploy-repository }}" "${{ steps.deployed-commit.outputs.deployed_commit_sha }}" "${{ inputs.preview-branch }}" "${{ inputs.token }}"
           shell: bash
 
-        - name: Leave a comment after deployment
+        - name: Generate comment content for deployment
+          id: deploy-comment
           if: |
               env.deployment_action == 'deploy' &&
               (inputs.comment == 'true' || inputs.comment == true) &&
               (env.deployment_status == 'success' || env.deployment_status == 'skipped')
+          run: |
+              CONTENT=$($GITHUB_ACTION_PATH/lib/generate-comment.sh \
+                "${{ env.action_repository }}" \
+                "${{ env.action_version }}" \
+                "${{ env.preview_url }}" \
+                "${{ inputs.preview-branch }}" \
+                "${{ github.server_url }}" \
+                "${{ inputs.deploy-repository }}" \
+                "${{ env.action_start_time }}" \
+                "deploy")
+              {
+                echo "content<<EOF"
+                echo "$CONTENT"
+                echo "EOF"
+              } >> $GITHUB_OUTPUT
+          shell: bash
+
+        - name: Leave a comment after deployment
+          if: |
+              env.deployment_action == 'deploy' &&
+              (inputs.comment == 'true' || inputs.comment == true) &&
+              (env.deployment_status == 'success' || env.deployment_status == 'skipped') &&
+              steps.deploy-comment.outcome == 'success'
           uses: marocchino/sticky-pull-request-comment@67d0dec7b07ed060a405f9b2a64b8ab319fdd7db # v2.9.2
           with:
               header: pr-preview
-              message: |
-                  [PR Preview Action](https://github.com/${{ env.action_repository }}) ${{ env.action_version }}
-                  :---:
-                  | <p></p> :rocket: View preview at <br> ${{ env.preview_url }} <br><br>
-                  | <h6>Built to branch [`${{ inputs.preview-branch }}`](${{ github.server_url }}/${{ inputs.deploy-repository }}/tree/${{ inputs.preview-branch }}) at ${{ env.action_start_time }}. <br> Preview will be ready when the [GitHub Pages deployment](${{ github.server_url }}/${{ inputs.deploy-repository }}/deployments) is complete. <br><br> </h6>
+              message: ${{ steps.deploy-comment.outputs.content }}
 
         # REMOVAL
 
@@ -227,16 +247,36 @@ runs:
               wait_for_pages_deployment "${{ inputs.deploy-repository }}" "${{ steps.removed-commit.outputs.deployed_commit_sha }}" "${{ inputs.preview-branch }}" "${{ inputs.token }}"
           shell: bash
 
-        - name: Leave a comment after removal
+        - name: Generate comment content for removal
+          id: remove-comment
           if: |
               env.deployment_action == 'remove' &&
               (inputs.comment == 'true' || inputs.comment == true) &&
               (env.deployment_status == 'success' || env.deployment_status == 'skipped')
+          run: |
+              CONTENT=$($GITHUB_ACTION_PATH/lib/generate-comment.sh \
+                "${{ env.action_repository }}" \
+                "${{ env.action_version }}" \
+                "${{ env.preview_url }}" \
+                "${{ inputs.preview-branch }}" \
+                "${{ github.server_url }}" \
+                "${{ inputs.deploy-repository }}" \
+                "${{ env.action_start_time }}" \
+                "remove")
+              {
+                echo "content<<EOF"
+                echo "$CONTENT"
+                echo "EOF"
+              } >> $GITHUB_OUTPUT
+          shell: bash
+
+        - name: Leave a comment after removal
+          if: |
+              env.deployment_action == 'remove' &&
+              (inputs.comment == 'true' || inputs.comment == true) &&
+              (env.deployment_status == 'success' || env.deployment_status == 'skipped') &&
+              steps.remove-comment.outcome == 'success'
           uses: marocchino/sticky-pull-request-comment@67d0dec7b07ed060a405f9b2a64b8ab319fdd7db # v2.9.2
           with:
               header: pr-preview
-              message: |
-                  [PR Preview Action](https://github.com/${{ env.action_repository }}) ${{ env.action_version }}
-                  :---:
-                  Preview removed because the pull request was closed.
-                  ${{ env.action_start_time }}
+              message: ${{ steps.remove-comment.outputs.content }}
