@@ -21,8 +21,8 @@ wait_for_pages_deployment() {
     local BRANCH="${3:?missing arg 3: BRANCH}"
     local TOKEN="${4:?missing arg 4: TOKEN}"
 
-    local PAGES_BUILD_STARTED_TIMEOUT=180
-    local PAGES_BUILD_FINISHED_TIMEOUT=180
+    local PAGES_BUILD_STARTED_TIMEOUT=90
+    local PAGES_BUILD_FINISHED_TIMEOUT=1800
 
     if [ ${#TARGET_SHA} -ne 40 ]; then
         echo "Error: Expected 40-character SHA, got ${#TARGET_SHA} characters: $TARGET_SHA"
@@ -108,7 +108,7 @@ wait_for_pages_deployment() {
             done < <(echo "$builds_response" | jq -r '.[].commit')
         fi
 
-        if [ $elapsed -ge $PAGES_BUILD_STARTED_TIMEOUT ]; then
+        if [ $elapsed -ge "$PAGES_BUILD_STARTED_TIMEOUT" ]; then
             echo >&2 "Timed out ($PAGES_BUILD_STARTED_TIMEOUT) waiting for build to start"
             exit 1
         fi
