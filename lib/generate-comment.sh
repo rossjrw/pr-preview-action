@@ -4,14 +4,14 @@ set -euo pipefail
 # Generate comment content for PR preview deployment
 # Usage: generate-comment.sh <action_repository> <action_version> <preview_url> <preview_branch> <server_url> <deploy_repository> <action_start_time> <deployment_action>
 
-action_repository=$1
-action_version=$2
-preview_url=$3
-preview_branch=$4
-server_url=$5
-deploy_repository=$6
-action_start_time=$7
-deployment_action=$8
+action_repository=${1:?missing action_repository}
+action_version=${2:?missing action_version}
+preview_url=${3:?missing preview_url}
+preview_branch=${4:?missing preview_branch}
+server_url=${5:?missing server_url}
+deploy_repository=${6:?missing deploy_repository}
+action_start_time=${7:?missing action_start_time}
+deployment_action=${8:?missing deployment_action}
 
 if [ "$deployment_action" = "deploy" ]; then
     cat << EOF

@@ -5,6 +5,9 @@ on:
         branches:
             - main
     pull_request:
+        types: [opened, synchronize, reopened]
+    pull_request_target:
+        types: [opened, synchronize, reopened]
     workflow_dispatch:
 
 concurrency:
@@ -12,22 +15,37 @@ concurrency:
     cancel-in-progress: true
 
 jobs:
+    # Safe tests run on all PRs, including forks
     test-unit:
         name: Unit tests
+        # Skip on pull_request_target if already ran via pull_request (same-repo PRs)
+        if: |
+            github.event_name != 'pull_request_target' ||
+            github.event.pull_request.head.repo.full_name != github.repository
         runs-on: ubuntu-latest
         steps:
             - name: Checkout
               uses: actions/checkout@v4
+              with:
+                  # For pull_request_target, checkout the PR head safely
+                  ref: ${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.ref }}
 
             - name: Run tests
               run: bash test/run-unit-tests.sh
 
     test-comment-content:
         name: Comment content
+        # Skip on pull_request_target if already ran via pull_request (same-repo PRs)
+        if: |
+            github.event_name != 'pull_request_target' ||
+            github.event.pull_request.head.repo.full_name != github.repository
         runs-on: ubuntu-latest
         steps:
             - name: Checkout
               uses: actions/checkout@v4
+              with:
+                  # For pull_request_target, checkout the PR head safely
+                  ref: ${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.ref }}
 
             - name: Test deploy comment
               env:
@@ -57,308 +75,22 @@ jobs:
                   deprecated_custom_url: ""
               run: bash test/integration/test-comment-content.sh remove
 
-    # Git-level tests verify repository state without waiting for Pages deployment
-    test-git-lifecycle:
-        name: "[Git] Lifecycle"
-        runs-on: ubuntu-latest
-        env:
-            TEST_ID: test-git-lifecycle
-            TEST_UMBRELLA_DIR: pr-preview-run-${{ github.run_id }}
-            TEST_DEPLOY_REPO: rozzjrw/pr-preview-action-testing
-        steps:
-            - name: Checkout
-              uses: actions/checkout@v4
-
-            - name: Modify fixture
-              run: sed -i.bak 's/<p id="testid">.*<\/p>/<p id="testid">${{ env.TEST_ID }}-INITIALISED<\/p>/' test/fixtures/html/index.html
-
-            - name: Deploy
-              uses: ./
-              with:
-                  pr-number: ${{ env.TEST_ID }}
-                  umbrella-dir: ${{ env.TEST_UMBRELLA_DIR }}
-                  token: ${{ secrets.TEST_DEPLOY_TOKEN }}
-                  deploy-repository: ${{ env.TEST_DEPLOY_REPO }}
-                  preview-branch: ${{ env.TEST_ID }}
-                  source-dir: test/fixtures/html
-                  action: deploy
-                  comment: false
-                  wait-for-pages-deployment: false
-                  git-config-name: GitHub Actions
-                  git-config-email: actions@github.com
-                  deploy-commit-message: deploy ${{ env.TEST_ID }} ${{ github.run_id }}
-                  remove-commit-message: remove ${{ env.TEST_ID }} ${{ github.run_id }}
-
-            - name: Verify deployed
-              env:
-                  GITHUB_TOKEN: ${{ secrets.TEST_DEPLOY_TOKEN }}
-                  DEPLOY_REPO: ${{ env.TEST_DEPLOY_REPO }}
-                  PREVIEW_BRANCH: ${{ env.TEST_ID }}
-                  UMBRELLA_DIR: ${{ env.TEST_UMBRELLA_DIR }}
-              run: bash test/integration/test-git-lifecycle.sh "deployed" "${{ env.TEST_ID }}-INITIALISED"
-
-            - name: Modify fixture
-              run: sed -i.bak 's/<p id="testid">.*<\/p>/<p id="testid">${{ env.TEST_ID }}-REDEPLOYED<\/p>/' test/fixtures/html/index.html
-
-            - name: Redeploy
-              uses: ./
-              with:
-                  pr-number: ${{ env.TEST_ID }}
-                  umbrella-dir: ${{ env.TEST_UMBRELLA_DIR }}
-                  token: ${{ secrets.TEST_DEPLOY_TOKEN }}
-                  deploy-repository: ${{ env.TEST_DEPLOY_REPO }}
-                  preview-branch: ${{ env.TEST_ID }}
-                  source-dir: test/fixtures/html
-                  action: deploy
-                  comment: false
-                  wait-for-pages-deployment: false
-                  git-config-name: GitHub Actions
-                  git-config-email: actions@github.com
-                  deploy-commit-message: deploy ${{ env.TEST_ID }} ${{ github.run_id }}
-                  remove-commit-message: remove ${{ env.TEST_ID }} ${{ github.run_id }}
-
-            - name: Verify redeployed
-              env:
-                  GITHUB_TOKEN: ${{ secrets.TEST_DEPLOY_TOKEN }}
-                  DEPLOY_REPO: ${{ env.TEST_DEPLOY_REPO }}
-                  PREVIEW_BRANCH: ${{ env.TEST_ID }}
-                  UMBRELLA_DIR: ${{ env.TEST_UMBRELLA_DIR }}
-              run: bash test/integration/test-git-lifecycle.sh "deployed" "${{ env.TEST_ID }}-REDEPLOYED"
-
-            - name: Remove
-              uses: ./
-              with:
-                  pr-number: ${{ env.TEST_ID }}
-                  umbrella-dir: ${{ env.TEST_UMBRELLA_DIR }}
-                  token: ${{ secrets.TEST_DEPLOY_TOKEN }}
-                  deploy-repository: ${{ env.TEST_DEPLOY_REPO }}
-                  preview-branch: ${{ env.TEST_ID }}
-                  action: remove
-                  comment: false
-                  wait-for-pages-deployment: false
-                  git-config-name: GitHub Actions
-                  git-config-email: actions@github.com
-                  deploy-commit-message: deploy ${{ env.TEST_ID }} ${{ github.run_id }}
-                  remove-commit-message: remove ${{ env.TEST_ID }} ${{ github.run_id }}
-
-            - name: Verify removed
-              env:
-                  GITHUB_TOKEN: ${{ secrets.TEST_DEPLOY_TOKEN }}
-                  DEPLOY_REPO: ${{ env.TEST_DEPLOY_REPO }}
-                  PREVIEW_BRANCH: ${{ env.TEST_ID }}
-                  UMBRELLA_DIR: ${{ env.TEST_UMBRELLA_DIR }}
-              run: bash test/integration/test-git-lifecycle.sh "removed"
-
-            - name: Cleanup
-              if: failure()
-              run: |
-                  echo "Action removal failed or was incomplete, performing manual cleanup..."
-                  source test/lib/cleanup-test-deployment.sh
-                  cleanup_deployment "${{ env.TEST_DEPLOY_REPO }}" "${{ env.TEST_ID }}" "${{ secrets.TEST_DEPLOY_TOKEN }}" "${{ env.TEST_UMBRELLA_DIR }}"
-
-    test-git-custom-umbrella:
-        name: "[Git] Custom umbrella"
-        runs-on: ubuntu-latest
-        env:
-            TEST_ID: test-git-custom-umbrella
-            TEST_UMBRELLA_DIR: pr-preview-run-${{ github.run_id }}
-            CUSTOM_UMBRELLA_DIR: custom-previews-run-${{ github.run_id }}
-            TEST_DEPLOY_REPO: rozzjrw/pr-preview-action-testing
-        steps:
-            - name: Checkout
-              uses: actions/checkout@v4
-
-            - name: Modify fixture
-              run: sed -i 's/<p id="testid">.*<\/p>/<p id="testid">${{ env.TEST_ID }}<\/p>/' test/fixtures/html/index.html
-
-            - name: Deploy
-              uses: ./
-              with:
-                  pr-number: ${{ env.TEST_ID }}
-                  umbrella-dir: ${{ env.CUSTOM_UMBRELLA_DIR }}
-                  token: ${{ secrets.TEST_DEPLOY_TOKEN }}
-                  deploy-repository: ${{ env.TEST_DEPLOY_REPO }}
-                  preview-branch: ${{ env.TEST_ID }}
-                  source-dir: test/fixtures/html
-                  action: deploy
-                  comment: false
-                  wait-for-pages-deployment: false
-                  git-config-name: GitHub Actions
-                  git-config-email: actions@github.com
-                  deploy-commit-message: deploy ${{ env.TEST_ID }} ${{ github.run_id }}
-                  remove-commit-message: remove ${{ env.TEST_ID }} ${{ github.run_id }}
-
-            - name: Verify
-              env:
-                  GITHUB_TOKEN: ${{ secrets.TEST_DEPLOY_TOKEN }}
-                  DEPLOY_REPO: ${{ env.TEST_DEPLOY_REPO }}
-                  PREVIEW_BRANCH: ${{ env.TEST_ID }}
-                  TEST_UMBRELLA_DIR: ${{ env.TEST_UMBRELLA_DIR }}
-                  CUSTOM_UMBRELLA_DIR: ${{ env.CUSTOM_UMBRELLA_DIR }}
-              run: bash test/integration/test-git-custom-umbrella.sh
-
-            - name: Cleanup
-              if: always()
-              run: |
-                  source test/lib/cleanup-test-deployment.sh
-                  cleanup_deployment "${{ env.TEST_DEPLOY_REPO }}" "${{ env.TEST_ID }}" "${{ secrets.TEST_DEPLOY_TOKEN }}" "${{ env.TEST_UMBRELLA_DIR }}" "${{ env.CUSTOM_UMBRELLA_DIR }}"
-
-    test-git-concurrent:
-        name: "[Git] Concurrency"
-        runs-on: ubuntu-latest
-        env:
-            TEST_ID: test-git-concurrent
-            TEST_UMBRELLA_DIR: pr-preview-run-${{ github.run_id }}
-            TEST_DEPLOY_REPO: rozzjrw/pr-preview-action-testing
-        steps:
-            - name: Checkout
-              uses: actions/checkout@v4
-
-            - name: Modify fixture
-              run: sed -i.bak 's/<p id="testid">.*<\/p>/<p id="testid">${{ env.TEST_ID }}-1<\/p>/' test/fixtures/html/index.html
-
-            - name: Deploy PR 1
-              uses: ./
-              with:
-                  pr-number: ${{ env.TEST_ID }}-1
-                  umbrella-dir: ${{ env.TEST_UMBRELLA_DIR }}
-                  token: ${{ secrets.TEST_DEPLOY_TOKEN }}
-                  deploy-repository: ${{ env.TEST_DEPLOY_REPO }}
-                  preview-branch: ${{ env.TEST_ID }}
-                  source-dir: test/fixtures/html
-                  action: deploy
-                  comment: false
-                  wait-for-pages-deployment: false
-                  git-config-name: GitHub Actions
-                  git-config-email: actions@github.com
-                  deploy-commit-message: deploy ${{ env.TEST_ID }} ${{ github.run_id }}
-                  remove-commit-message: remove ${{ env.TEST_ID }} ${{ github.run_id }}
-
-            - name: Modify fixture
-              run: sed -i.bak 's/<p id="testid">.*<\/p>/<p id="testid">${{ env.TEST_ID }}-2<\/p>/' test/fixtures/html/index.html
-
-            - name: Deploy PR 2
-              uses: ./
-              with:
-                  pr-number: ${{ env.TEST_ID }}-2
-                  umbrella-dir: ${{ env.TEST_UMBRELLA_DIR }}
-                  token: ${{ secrets.TEST_DEPLOY_TOKEN }}
-                  deploy-repository: ${{ env.TEST_DEPLOY_REPO }}
-                  preview-branch: ${{ env.TEST_ID }}
-                  source-dir: test/fixtures/html
-                  action: deploy
-                  comment: false
-                  wait-for-pages-deployment: false
-                  git-config-name: GitHub Actions
-                  git-config-email: actions@github.com
-                  deploy-commit-message: deploy ${{ env.TEST_ID }} ${{ github.run_id }}
-                  remove-commit-message: remove ${{ env.TEST_ID }} ${{ github.run_id }}
-
-            - name: Modify fixture
-              run: sed -i.bak 's/<p id="testid">.*<\/p>/<p id="testid">${{ env.TEST_ID }}-2-redeployed<\/p>/' test/fixtures/html/index.html
-
-            - name: Deploy PR 2 (again)
-              uses: ./
-              with:
-                  pr-number: ${{ env.TEST_ID }}-2
-                  umbrella-dir: ${{ env.TEST_UMBRELLA_DIR }}
-                  token: ${{ secrets.TEST_DEPLOY_TOKEN }}
-                  deploy-repository: ${{ env.TEST_DEPLOY_REPO }}
-                  preview-branch: ${{ env.TEST_ID }}
-                  source-dir: test/fixtures/html
-                  action: deploy
-                  comment: false
-                  wait-for-pages-deployment: false
-                  git-config-name: GitHub Actions
-                  git-config-email: actions@github.com
-                  deploy-commit-message: deploy ${{ env.TEST_ID }} ${{ github.run_id }}
-                  remove-commit-message: remove ${{ env.TEST_ID }} ${{ github.run_id }}
-
-            - name: Verify
-              env:
-                  GITHUB_TOKEN: ${{ secrets.TEST_DEPLOY_TOKEN }}
-                  DEPLOY_REPO: ${{ env.TEST_DEPLOY_REPO }}
-                  PREVIEW_BRANCH: ${{ env.TEST_ID }}
-                  UMBRELLA_DIR: ${{ env.TEST_UMBRELLA_DIR }}
-              run: bash test/integration/test-git-concurrent.sh
-
-            - name: Cleanup
-              if: always()
-              run: |
-                  source test/lib/cleanup-test-deployment.sh
-                  cleanup_deployment "${{ env.TEST_DEPLOY_REPO }}" "${{ env.TEST_ID }}" "${{ secrets.TEST_DEPLOY_TOKEN }}" "${{ env.TEST_UMBRELLA_DIR }}"
-
-    # Pages deployment test runs after git tests pass
-    # This is the only test that uses the actual Pages branch and waits for deployment
-    test-pages-lifecycle:
-        name: "[Pages] Lifecycle"
-        needs:
-            [test-git-custom-umbrella, test-git-lifecycle, test-git-concurrent]
-        runs-on: ubuntu-latest
-        env:
-            TEST_ID: test-pages-lifecycle
-            TEST_UMBRELLA_DIR: pr-preview-run-${{ github.run_id }}
-            TEST_DEPLOY_REPO: rozzjrw/pr-preview-action-testing
-            TEST_DEPLOY_REPO_BRANCH: main
-        steps:
-            - name: Checkout
-              uses: actions/checkout@v4
-
-            - name: Modify fixture
-              run: sed -i.bak 's/<p id="testid">.*<\/p>/<p id="testid">${{ env.TEST_ID }}<\/p>/' test/fixtures/html/index.html
-
-            - name: Deploy and wait
-              uses: ./
-              with:
-                  pr-number: ${{ env.TEST_ID }}
-                  umbrella-dir: ${{ env.TEST_UMBRELLA_DIR }}
-                  token: ${{ secrets.TEST_DEPLOY_TOKEN }}
-                  deploy-repository: ${{ env.TEST_DEPLOY_REPO }}
-                  preview-branch: ${{ env.TEST_DEPLOY_REPO_BRANCH }}
-                  source-dir: test/fixtures/html
-                  action: deploy
-                  comment: false
-                  wait-for-pages-deployment: true
-                  git-config-name: GitHub Actions
-                  git-config-email: actions@github.com
-                  deploy-commit-message: deploy ${{ env.TEST_ID }} ${{ github.run_id }}
-                  remove-commit-message: remove ${{ env.TEST_ID }} ${{ github.run_id }}
-
-            - name: Verify
-              env:
-                  GITHUB_TOKEN: ${{ secrets.TEST_DEPLOY_TOKEN }}
-                  DEPLOY_REPO: ${{ env.TEST_DEPLOY_REPO }}
-                  PREVIEW_BRANCH: ${{ env.TEST_DEPLOY_REPO_BRANCH }}
-                  UMBRELLA_DIR: ${{ env.TEST_UMBRELLA_DIR }}
-              run: bash test/integration/test-pages-lifecycle.sh "deployed"
-
-            - name: Remove
-              uses: ./
-              with:
-                  pr-number: ${{ env.TEST_ID }}
-                  umbrella-dir: ${{ env.TEST_UMBRELLA_DIR }}
-                  token: ${{ secrets.TEST_DEPLOY_TOKEN }}
-                  deploy-repository: ${{ env.TEST_DEPLOY_REPO }}
-                  preview-branch: ${{ env.TEST_DEPLOY_REPO_BRANCH }}
-                  action: remove
-                  comment: false
-                  wait-for-pages-deployment: true
-                  git-config-name: GitHub Actions
-                  git-config-email: actions@github.com
-                  deploy-commit-message: deploy ${{ env.TEST_ID }} ${{ github.run_id }}
-                  remove-commit-message: remove ${{ env.TEST_ID }} ${{ github.run_id }}
-
-            - name: Verify removed
-              env:
-                  GITHUB_TOKEN: ${{ secrets.TEST_DEPLOY_TOKEN }}
-                  DEPLOY_REPO: ${{ env.TEST_DEPLOY_REPO }}
-                  PREVIEW_BRANCH: ${{ env.TEST_DEPLOY_REPO_BRANCH }}
-                  UMBRELLA_DIR: ${{ env.TEST_UMBRELLA_DIR }}
-              run: bash test/integration/test-pages-lifecycle.sh "removed"
-
-            - name: Cleanup
-              if: failure()
-              run: |
-                  echo "Action removal failed or was incomplete, performing manual cleanup..."
-                  source test/lib/cleanup-test-deployment.sh
-                  cleanup_deployment "${{ env.TEST_DEPLOY_REPO }}" "${{ env.TEST_ID }}" "${{ secrets.TEST_DEPLOY_TOKEN }}" "${{ env.TEST_UMBRELLA_DIR }}"
+    # Integration tests require secrets, so only run when secrets are available
+    integration-tests:
+        name: Integration tests
+        needs: [test-unit, test-comment-content]
+        # Run integration tests when:
+        # 1. Push to main
+        # 2. Same-repo PR (secrets available via pull_request)
+        # 3. Forked PR (secrets available via pull_request_target)
+        if: |
+            github.event_name == 'push' ||
+            github.event_name == 'workflow_dispatch' ||
+            (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository) ||
+            (github.event_name == 'pull_request_target' && github.event.pull_request.head.repo.full_name != github.repository)
+        uses: ./.github/workflows/test-integration.yml
+        with:
+            ref: ${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.ref || github.ref }}
+            sha: ${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}
+        secrets:
+            test-deploy-token: ${{ secrets.TEST_DEPLOY_TOKEN }}
