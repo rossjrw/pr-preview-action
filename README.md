@@ -14,7 +14,7 @@ Features:
 Preview URLs look like this: `https://[owner].github.io/[repo]/pr-preview/pr-[number]/`
 
 <p align="center">
-  <img src="https://github.com/rossjrw/pr-preview-action/blob/main/.github/sample-preview-link.png" alt="Sample comment left by the action">
+  <img src="https://github.com/rossjrw/pr-preview-action/blob/main/.github/sample-preview-link.png" alt="Sample comment left by the action" width="546">
 </p>
 <p align="center">
   Pictured: https://github.com/rossjrw/pr-preview-action/pull/1
