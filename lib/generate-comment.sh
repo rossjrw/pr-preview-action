@@ -12,6 +12,7 @@ server_url=${5:?missing server_url}
 deploy_repository=${6:?missing deploy_repository}
 action_start_time=${7:?missing action_start_time}
 deployment_action=${8:?missing deployment_action}
+qr_code_provider=${9:-} # falsy qr code provider means no QR code
 
 if [ "$deployment_action" = "deploy" ]; then
     cat << EOF
@@ -20,6 +21,10 @@ if [ "$deployment_action" = "deploy" ]; then
 | <p></p> :rocket: View preview at <br> ${preview_url} <br><br>
 | <h6>Built to branch [\`${preview_branch}\`](${server_url}/${deploy_repository}/tree/${preview_branch}) at ${action_start_time}. <br> Preview will be ready when the [GitHub Pages deployment](${server_url}/${deploy_repository}/deployments) is complete. <br><br> </h6>
 EOF
+
+    if [ -n "$qr_code_provider" ]; then
+        echo "| ![QR Code](${qr_code_provider}${preview_url}) |"
+    fi
 
 elif [ "$deployment_action" = "remove" ]; then
     cat << EOF

@@ -142,11 +142,12 @@ runs:
               pages_base_url: ${{ inputs.pages-base-url }}
               pages_base_path: ${{ inputs.pages-base-path }}
               pr_number: ${{ inputs.pr-number || github.event.number }}
-              github_action_ref: ${{ github.action_ref || github.ref }}
-              github_action_repository: ${{ github.action_repository || github.repository }}
+              action_repository: ${{ github.action_repository || github.repository }}
+              action_ref: ${{ github.action_ref || github.ref }}
               deployment_repository: ${{ inputs.deploy-repository }}
               token: ${{ inputs.token }}
               deprecated_custom_url: ${{ inputs.custom-url }}
+              qr_code_wanted: ${{ inputs.qr-code }}
           run: $GITHUB_ACTION_PATH/lib/main.sh
           shell: bash
 
@@ -201,7 +202,8 @@ runs:
                 "${{ github.server_url }}" \
                 "${{ inputs.deploy-repository }}" \
                 "${{ env.action_start_time }}" \
-                "deploy")
+                "deploy" \
+                "${{ env.qr_code_provider }}")
               {
                 echo "content<<EOF"
                 echo "$CONTENT"
@@ -271,7 +273,8 @@ runs:
                 "${{ github.server_url }}" \
                 "${{ inputs.deploy-repository }}" \
                 "${{ env.action_start_time }}" \
-                "remove")
+                "remove" \
+                "${{ env.qr_code_provider }}")
               {
                 echo "content<<EOF"
                 echo "$CONTENT"
