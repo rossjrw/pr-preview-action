@@ -37,7 +37,7 @@ action_start_time=$(date '+%Y-%m-%d %H:%M %Z')
 
 if [ "$qr_code_wanted" != "false" ]; then
     if [ "$qr_code_wanted" = "true" ]; then
-        qr_code_provider="https://qr.rossjrw.com/?url="
+        qr_code_provider="https://qr.rossjrw.com/?color.dark=0d1117&url="
     else
         qr_code_provider="$qr_code_wanted"
     fi

@@ -2,7 +2,6 @@
 set -euo pipefail
 
 # Generate comment content for PR preview deployment
-# Usage: generate-comment.sh <action_repository> <action_version> <preview_url> <preview_branch> <server_url> <deploy_repository> <action_start_time> <deployment_action>
 
 action_repository=${1:?missing action_repository}
 action_version=${2:?missing action_version}
@@ -15,16 +14,17 @@ deployment_action=${8:?missing deployment_action}
 qr_code_provider=${9:-} # falsy qr code provider means no QR code
 
 if [ "$deployment_action" = "deploy" ]; then
+    qr_code=""
+    if [ -n "$qr_code_provider" ]; then
+        qr_code="<img src=\"${qr_code_provider}${preview_url}\" height=\"100\" align=\"right\" alt=\"QR code for preview link\">"
+    fi
+
     cat << EOF
 [PR Preview Action](https://github.com/${action_repository}) ${action_version}
 :---:
-| <p></p> :rocket: View preview at <br> ${preview_url} <br><br>
+| <p>$qr_code</p> :rocket: View preview at <br> ${preview_url} <br><br>
 | <h6>Built to branch [\`${preview_branch}\`](${server_url}/${deploy_repository}/tree/${preview_branch}) at ${action_start_time}. <br> Preview will be ready when the [GitHub Pages deployment](${server_url}/${deploy_repository}/deployments) is complete. <br><br> </h6>
 EOF
-
-    if [ -n "$qr_code_provider" ]; then
-        echo "| ![QR Code](${qr_code_provider}${preview_url}) |"
-    fi
 
 elif [ "$deployment_action" = "remove" ]; then
     cat << EOF

@@ -36,6 +36,7 @@ assert_file_contains "$comment_file" "$action_version"
 assert_file_contains "$comment_file" "$preview_url"
 assert_file_contains "$comment_file" "Built to branch"
 assert_file_contains "$comment_file" "pr-12345"
+assert_file_contains "$comment_file" "qr.rossjrw.com" && exit 1 || true
 
 echo >&2 "test comment: removal"
 echo >&2 "==============================="
@@ -56,6 +57,7 @@ echo >&2 "==============================="
 assert_file_contains "$comment_file" "PR Preview Action"
 assert_file_contains "$comment_file" "$action_version"
 assert_file_contains "$comment_file" "Preview removed"
+assert_file_contains "$comment_file" "qr.rossjrw.com" && exit 1 || true
 
 echo >&2 "test comment: deployment with QR code"
 echo >&2 "==============================="
