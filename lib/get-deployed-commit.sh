@@ -17,7 +17,7 @@ fi
 # Get the latest commit SHA from the deployment branch
 DEPLOYED_SHA=$(curl -s -H "Authorization: token $DEPLOY_TOKEN" \
     -H "Accept: application/vnd.github.v3+json" \
-    "https://api.github.com/repos/$DEPLOY_REPO/git/refs/heads/$DEPLOY_BRANCH" \
+    "$GITHUB_API_URL/repos/$DEPLOY_REPO/git/refs/heads/$DEPLOY_BRANCH" \
     | grep -o '"sha": "[^"]*"' | head -1 | cut -d'"' -f4)
 
 if [ -z "$DEPLOYED_SHA" ]; then

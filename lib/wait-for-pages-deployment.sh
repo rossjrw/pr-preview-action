@@ -51,7 +51,7 @@ wait_for_pages_deployment() {
                 -H "Authorization: Bearer $TOKEN" \
                 -H "Accept: application/vnd.github+json" \
                 -H "X-GitHub-Api-Version: 2022-11-28" \
-                "https://api.github.com/repos/$REPO/pages/builds?per_page=100"
+                "$GITHUB_API_URL/repos/$REPO/pages/builds?per_page=100"
         )
 
         # Get the build ID for this commit SHA if present
