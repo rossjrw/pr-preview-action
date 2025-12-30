@@ -21,7 +21,7 @@ wait_for_pages_deployment() {
     local BRANCH="${3:?missing arg 3: BRANCH}"
     local TOKEN="${4:?missing arg 4: TOKEN}"
 
-    local PAGES_BUILD_STARTED_TIMEOUT=90
+    local PAGES_BUILD_STARTED_TIMEOUT=180
     local PAGES_BUILD_FINISHED_TIMEOUT=1800
 
     if [ ${#TARGET_SHA} -ne 40 ]; then
