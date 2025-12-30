@@ -22,13 +22,15 @@ Preview URLs look like this: `https://[owner].github.io/[repo]/pr-preview/pr-[nu
 
 This Action does not currently support deploying previews for PRs from forks, but will do so in [the upcoming v2](https://github.com/rossjrw/pr-preview-action/pull/6).
 
-# Usage
+# Setup
 
 A [GitHub Actions workflow](https://docs.github.com/en/actions/learn-github-actions) is required to use this Action.
 
-All the workflow needs to do first is checkout the repository and build the Pages site.
+You just need to do two things to set up your repository to support previews, both in the repository settings:
 
-First, ensure that your repository is configured to have its GitHub Pages site deployed from a branch, by setting the source for the deployment under **Settings** > **Pages** of your repository to **Deploy from branch**:
+### 1. Deploy Pages from branch
+
+Ensure that your repository is configured to have its GitHub Pages site deployed from a branch, by setting the source for the deployment under **Settings** > **Pages** of your repository to **Deploy from branch**:
 
 <p align="center">
   <img src="https://github.com/rossjrw/pr-preview-action/blob/main/.github/deployment-settings.png" alt="GitHub Pages settings">
@@ -37,7 +39,16 @@ First, ensure that your repository is configured to have its GitHub Pages site d
   Pictured: Repository Pages settings at /settings/page
 </p>
 
-The `gh-pages` branch is used for GitHub Pages deployments by convention, and will be used in examples here as well.
+> [!IMPORTANT]  
+> The other option (called "GitHub Actions") has a [misleading name](https://github.com/orgs/community/discussions/30113#discussioncomment-7650234) and does not work with this action.
+
+### 2. Let your workflow write to the repo
+
+In **Settings** > **Actions** > **General** > **Workflow permissions**, select "Read and write permissions" to allow action runs to make changes to your deployment branch (in this case, to add and remove previews).
+
+# Usage
+
+All the workflow needs to do before running the preview action is checkout the repository and build the Pages site.
 
 If your GitHub pages site is deployed from the `gh-pages` branch, built with e.g. an `npm` script to the `./build/` dir, and you're happy with the default settings, usage is very simple:
 
@@ -72,12 +83,16 @@ jobs:
               uses: rossjrw/pr-preview-action@v1
               with:
                   source-dir: ./build/
+                  preview-branch: gh-pages
                   qr-code: true
 ```
 
+> [!TIP]  
+> The `gh-pages` branch is used for GitHub Pages deployments by convention, and will be used in examples here as well, but you can use whatever branch you like (just make sure to change the `preview-branch` input).
+
 ## Inputs (configuration)
 
-The following input parameters are provided, which can be passed to the `with` parameter. All parameters are optional and have a default value.
+The following input parameters are provided, which can be passed to the `with` parameter. ALL parameters are optional and have a default value.
 
 | Input&nbsp;parameter | Description |
 | --- | --- |
@@ -90,7 +105,7 @@ The following input parameters are provided, which can be passed to the `with` p
 | `pages-base-path` | Path that GitHub Pages is being served from, as configured in your repository settings, e.g. `docs/`. When generating the preview URL path, this is removed from the beginning of the file path. <br><br> Default: `.` (repository root) |
 | `wait-for-pages-deployment` <br> (boolean) | Whether to wait for the GitHub Pages deployment to complete. When enabled, the action will poll the GitHub Deployments API and delay workflow completion until the Pages deployment finishes, e.g. to ensure the preview URL is accessible when the comment is posted. <br><br> Default: `false` (this will be `true` in a future version of this Action) |
 | `comment` <br> (boolean) | Whether to leave a [sticky comment](https://github.com/marocchino/sticky-pull-request-comment) on the PR after the preview is built.<br> The comment may be added before the preview finishes deploying unless `wait-for-pages-deployment` is enabled. <br><br> Default: `true` |
-| `qr-code` <br> (boolean) | Whether to include a QR code in the sticky comment for easy mobile access, which links to the preview URL. Does nothing if `comment` is `false`. <br> Set to `"true"`/`"false"` to enable/disable, or to a string to be used as a custom QR code provider ([see below](#use-a-different-qr-code-provider)). <br><br> Default: `false` |
+| `qr-code` <br> (booleanish) | Whether to include a QR code in the sticky comment for easy mobile access, which links to the preview URL. Does nothing if `comment` is `false`. <br> Set to `"true"`/`"false"` to enable/disable, or to a string to be used as a custom QR code provider ([see below](#use-a-different-qr-code-provider)). <br><br> Default: `false` |
 | `token` | Authentication token for the preview deployment. <br> The default value works for non-fork pull requests to the same repository. For anything else, you will need a [Personal Access Token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token) with permission to access it, and [store it as a secret](https://docs.github.com/en/actions/security-guides/using-secrets-in-github-actions) in your repository. E.g. you might name that secret 'PREVIEW_TOKEN' and use it with `token: ${{ secrets.PREVIEW_TOKEN }}`. <br><br> Default: `${{ github.token }}`, which gives the action permission to deploy to the current repository. |
 | `action` <br> (enum) | Determines what this action will do when it is executed. Supported values: <br><br> <ul><li>`deploy` - create and deploy the preview, overwriting any existing preview in that location.</li><li>`remove` - remove the preview.</li><li>`auto` - determine whether to deploy or remove the preview based on [the emitted event](https://docs.github.com/en/developers/webhooks-and-events/webhooks/webhook-events-and-payloads#pull_request). If the event is `pull_request`, it will deploy the preview when the event type is `opened`, `reopened` and `synchronize`, and remove it on `closed` events. Does not do anything for other events or event types, even if you explicitly instruct the workflow to run on them.</li><li>`none` and all other values: does not do anything.</li></ul> Default: `auto` |
 
