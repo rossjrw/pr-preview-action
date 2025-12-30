@@ -22,12 +22,9 @@ assert_contains() {
     local haystack="$1"
     local needle="$2"
     local message="${3:-String should contain substring}"
-    echo >&2 "assert_contains: haystack='${haystack:0:100}...', needle='$needle', message='$message'"
+    echo >&2 "assert_contains: haystack='${haystack:0:30}...', needle='$needle'"
 
-    if [[ "$haystack" == *"$needle"* ]]; then
-        echo -e "${GREEN}PASS: $message${RESET}" >&2
-        return 0
-    else
+    if [[ "$haystack" != *"$needle"* ]]; then
         echo -e "${RED}FAIL: $message (needle='$needle' not in haystack)${RESET}" >&2
         return 1
     fi

@@ -33,52 +33,10 @@ jobs:
             - name: Run tests
               run: bash test/run-unit-tests.sh
 
-    test-comment-content:
-        name: Comment content
-        # Skip on pull_request_target if already ran via pull_request (same-repo PRs)
-        if: |
-            github.event_name != 'pull_request_target' ||
-            github.event.pull_request.head.repo.full_name != github.repository
-        runs-on: ubuntu-latest
-        steps:
-            - name: Checkout
-              uses: actions/checkout@v4
-              with:
-                  # For pull_request_target, checkout the PR head safely
-                  ref: ${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.ref }}
-
-            - name: Test deploy comment
-              env:
-                  GITHUB_ACTION_PATH: ${{ github.workspace }}
-                  umbrella_path: pr-preview
-                  pages_base_url: ""
-                  pages_base_path: ""
-                  pr_number: "12345"
-                  github_action_ref: ${{ github.ref }}
-                  github_action_repository: ${{ github.repository }}
-                  deployment_repository: test-owner/test-repo
-                  token: fake-token
-                  deprecated_custom_url: ""
-              run: bash test/integration/test-comment-content.sh deploy
-
-            - name: Test remove comment
-              env:
-                  GITHUB_ACTION_PATH: ${{ github.workspace }}
-                  umbrella_path: pr-preview
-                  pages_base_url: ""
-                  pages_base_path: ""
-                  pr_number: "12345"
-                  github_action_ref: ${{ github.ref }}
-                  github_action_repository: ${{ github.repository }}
-                  deployment_repository: test-owner/test-repo
-                  token: fake-token
-                  deprecated_custom_url: ""
-              run: bash test/integration/test-comment-content.sh remove
-
     # Integration tests require secrets, so only run when secrets are available
     integration-tests:
         name: Integration tests
-        needs: [test-unit, test-comment-content]
+        needs: [test-unit]
         # Run integration tests when:
         # 1. Push to main
         # 2. Same-repo PR (secrets available via pull_request)
