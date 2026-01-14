@@ -1,0 +1,8 @@
+{
+    "private": true,
+    "type": "commonjs",
+    "devDependencies": {
+        "image-size": "^2.0.2",
+        "playwright": "^1.57.0"
+    }
+}
