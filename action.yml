@@ -147,7 +147,6 @@ runs:
               deployment_repository: ${{ inputs.deploy-repository }}
               token: ${{ inputs.token }}
               deprecated_custom_url: ${{ inputs.custom-url }}
-              qr_code_provider: ${{ inputs.qr-code }}
           run: $GITHUB_ACTION_PATH/lib/main.sh
           shell: bash
 
@@ -203,7 +202,7 @@ runs:
                 "${{ inputs.deploy-repository }}" \
                 "${{ env.action_start_time }}" \
                 "deploy" \
-                "${{ env.qr_code_provider }}")
+                "${{ inputs.qr-code }}")
               {
                 echo "content<<EOF"
                 echo "$CONTENT"

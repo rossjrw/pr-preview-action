@@ -13,6 +13,16 @@ action_start_time=${7:?missing action_start_time}
 deployment_action=${8:?missing deployment_action}
 qr_code_provider=${9:-} # falsy qr code provider means no QR code
 
+if [ "$qr_code_provider" = "true" ]; then
+    # Default to builtin provider
+    qr_code_provider="https://qr.rossjrw.com/?color.dark=0d1117&url="
+fi
+if [ "$qr_code_provider" = "false" ]; then
+    qr_code_provider=""
+else
+    echo >&2 "Using QR code provider: $qr_code_provider<URL>"
+fi
+
 if [ "$deployment_action" = "deploy" ]; then
     qr_code=""
     if [ -n "$qr_code_provider" ]; then

@@ -5,7 +5,7 @@ source "$GITHUB_ACTION_PATH/lib/calculate-pages-base-url.sh"
 source "$GITHUB_ACTION_PATH/lib/remove-prefix-path.sh"
 source "$GITHUB_ACTION_PATH/lib/determine-auto-action.sh"
 
-declare deployment_action pr_number deployment_repository pages_base_url pages_base_path umbrella_path action_repository action_ref deprecated_custom_url qr_code_provider
+declare deployment_action pr_number deployment_repository pages_base_url pages_base_path umbrella_path action_repository action_ref deprecated_custom_url
 
 # Deprecation of custom-url in favour of pages-base-url
 if [ -z "$pages_base_url" ] && [ -n "$deprecated_custom_url" ]; then
@@ -35,16 +35,6 @@ action_version=$("$GITHUB_ACTION_PATH/lib/find-current-git-tag.sh" -p "$action_r
 action_start_timestamp=$(date '+%s')
 action_start_time=$(date '+%Y-%m-%d %H:%M %Z')
 
-if [ "$qr_code_provider" = "true" ]; then
-    # Default to builtin provider
-    qr_code_provider="https://qr.rossjrw.com/?color.dark=0d1117&url="
-fi
-if [ "$qr_code_provider" = "false" ]; then
-    qr_code_provider=""
-else
-    echo >&2 "Using QR code provider: $qr_code_provider<URL>"
-fi
-
 # Export variables for later use by this action
 {
     echo "empty_dir_path=$(mktemp -d)"
@@ -58,8 +48,6 @@ fi
     echo "action_repository=$action_repository"
     echo "action_version=$action_version"
     echo "action_start_time=$action_start_time"
-
-    echo "qr_code_provider=$qr_code_provider"
 } >> "$GITHUB_ENV"
 
 # Export variables for use by later actions in user workflow
