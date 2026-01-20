@@ -7,7 +7,7 @@ Features:
 -   Creates and deploys previews of pull requests to your GitHub Pages site
 -   Leaves a comment on the pull request with a link to the preview so that you and your team can collaborate on new features faster
 -   Updates the deployment and the comment whenever new commits are pushed to the pull request
--   Can optionally include a QR code in the preview comment for easy mobile access
+-   Includes a QR code in the preview comment for easy mobile access
 -   Cleans up after itself &mdash; removes deployed previews when the pull request is closed
 -   Can be configured to override any of these behaviours
 
@@ -105,7 +105,7 @@ The following input parameters are provided, which can be passed to the `with` p
 | `pages-base-path` | Path that GitHub Pages is being served from, as configured in your repository settings, e.g. `docs/`. When generating the preview URL path, this is removed from the beginning of the file path. <br><br> Default: `.` (repository root) |
 | `wait-for-pages-deployment` <br> (boolean) | Whether to wait for the GitHub Pages deployment to complete. When enabled, the action will poll the GitHub Deployments API and delay workflow completion until the Pages deployment finishes, e.g. to ensure the preview URL is accessible when the comment is posted. <br><br> Default: `false` (this will be `true` in a future version of this Action) |
 | `comment` <br> (boolean) | Whether to leave a [sticky comment](https://github.com/marocchino/sticky-pull-request-comment) on the PR after the preview is built.<br> The comment may be added before the preview finishes deploying unless `wait-for-pages-deployment` is enabled. <br><br> Default: `true` |
-| `qr-code` <br> (booleanish) | Whether to include a QR code in the sticky comment for easy mobile access, which links to the preview URL. Does nothing if `comment` is `false`. <br> Set to `"true"`/`"false"` to enable/disable, or to a string to be used as a custom QR code provider ([see below](#use-a-different-qr-code-provider)). <br><br> Default: `false` |
+| `qr-code` <br> | Whether to include a QR code in the sticky comment for easy mobile access, which links to the preview URL. Only affects the default comment (i.e. if `comment` is not `false`). <br> Enabled by default - set to `false` to disable, or to a string to use a different provider ([see below](#use-a-different-qr-code-provider)). <br><br> Default: [`https://qr.rossjrw.com/?color.dark=0d1117&url=`](https://qr.rossjrw.com) |
 | `token` | Authentication token for the preview deployment. <br> The default value works for non-fork pull requests to the same repository. For anything else, you will need a [Personal Access Token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token) with permission to access it, and [store it as a secret](https://docs.github.com/en/actions/security-guides/using-secrets-in-github-actions) in your repository. E.g. you might name that secret 'PREVIEW_TOKEN' and use it with `token: ${{ secrets.PREVIEW_TOKEN }}`. <br><br> Default: `${{ github.token }}`, which gives the action permission to deploy to the current repository. |
 | `action` <br> (enum) | Determines what this action will do when it is executed. Supported values: <br><br> <ul><li>`deploy` - create and deploy the preview, overwriting any existing preview in that location.</li><li>`remove` - remove the preview.</li><li>`auto` - determine whether to deploy or remove the preview based on [the emitted event](https://docs.github.com/en/developers/webhooks-and-events/webhooks/webhook-events-and-payloads#pull_request). If the event is `pull_request`, it will deploy the preview when the event type is `opened`, `reopened` and `synchronize`, and remove it on `closed` events. Does not do anything for other events or event types, even if you explicitly instruct the workflow to run on them.</li><li>`none` and all other values: does not do anything.</li></ul> Default: `auto` |
 
@@ -346,18 +346,6 @@ Set `wait-for-deployment: true` to make the action automatically wait for Pages 
       wait-for-pages-deployment: true
 ```
 
-### Use a different QR code provider
-
-If you have this action include a QR code in the sticky comment with `qr-code: true`, the default QR code provider is [qr.rossjrw.com](https://qr.rossjrw.com/), a provider that I built for this project because I don't trust any pre-existing ones. Likewise, you probably shouldn't trust mine - what if I go rogue and change all your QR codes to point to something else? You never know.
-
-To use a different QR code provider (I encourage you to make your own - consider forking https://github.com/rossjrw/qrcode-worker), set `qr-code` to its URL. The URI-encoded preview link will be appended to it. E.g.:
-
-```yml
-- uses: rossjrw/pr-preview-action@v1
-  with:
-      qr-code: https://my-qrcode-provider.example.com/generate?url=
-```
-
 ### Customise the sticky comment
 
 You can use `id`, `with: comment: false`, the output values and [context variables](https://docs.github.com/en/actions/reference/workflows-and-actions/contexts) to construct your own comment to be left on the PR. This example recreates this Action's default comment (complete with HTML spacing jank), but you could change it however you like, use a different commenting Action from the marketplace, etc.
@@ -396,7 +384,7 @@ jobs:
                   message: |
                       [PR Preview Action](https://github.com/rossjrw/pr-preview-action) ${{ steps.preview-step.outputs.action-version }}
                       :---:
-                      | <p><img src="https://qr.rossjrw.com/?url=${preview_url}" height="100" align="right" alt="QR code for preview link"></p> :rocket: View preview at <br> ${{ steps.preview-step.outputs.preview-url }} <br><br>
+                      | <p><img src="https://qr.rossjrw.com/?url=${{ steps.preview-step.outputs.preview-url }}" height="100" align="right" alt="QR code for preview link"></p> :rocket: View preview at <br> ${{ steps.preview-step.outputs.preview-url }} <br><br>
                       | <h6>Built to branch [`${{ env.PREVIEW_BRANCH }}`](${{ github.server_url }}/${{ github.repository }}/tree/${{ env.PREVIEW_BRANCH }}) at ${{ steps.preview-step.outputs.action-start-time }}. <br> Preview will be ready when the [GitHub Pages deployment](${{ github.server_url }}/${{ github.repository }}/deployments) is complete. <br><br> </h6>
 
             - uses: marocchino/sticky-pull-request-comment@v2
@@ -409,6 +397,20 @@ jobs:
                       Preview removed because the pull request was closed.
                       ${{ steps.preview-step.outputs.action-start-time }}
 ```
+
+### Use a different QR code provider
+
+If you have this action include a QR code in the sticky comment with `qr-code: true`, the default QR code provider is [qr.rossjrw.com](https://qr.rossjrw.com/), a provider that I built for this project because I don't trust any pre-existing ones. Likewise, you probably shouldn't trust mine - what if I go rogue and change all your QR codes to point to something else? You never know.
+
+To use a different QR code provider (it's easy to make your own - consider forking https://github.com/rossjrw/qrcode-worker), set `qr-code` to its URL. The URI-encoded preview link will be appended to it. E.g.:
+
+```yml
+- uses: rossjrw/pr-preview-action@v1
+  with:
+      qr-code: https://my-qrcode-provider.example.com/generate?url=
+```
+
+If using a customised comment with `comment: false`, simply construct the image URL from your chosen provider's URL and the preview URL (`${{ steps.[JOB ID].outputs.preview-url }}`).
 
 # Acknowledgements
 

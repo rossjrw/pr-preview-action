@@ -36,7 +36,7 @@ assert_file_contains "$comment_file" "$action_version"
 assert_file_contains "$comment_file" "$preview_url"
 assert_file_contains "$comment_file" "Built to branch"
 assert_file_contains "$comment_file" "pr-12345"
-assert_file_contains "$comment_file" "qr.rossjrw.com" && exit 1 || true
+assert_file_contains "$comment_file" "/?url=" && exit 1 || true
 
 echo >&2 "test comment: removal"
 echo >&2 "==============================="
@@ -57,11 +57,11 @@ echo >&2 "==============================="
 assert_file_contains "$comment_file" "PR Preview Action"
 assert_file_contains "$comment_file" "$action_version"
 assert_file_contains "$comment_file" "Preview removed"
-assert_file_contains "$comment_file" "qr.rossjrw.com" && exit 1 || true
+assert_file_contains "$comment_file" "/?url=" && exit 1 || true
 
 echo >&2 "test comment: deployment with QR code"
 echo >&2 "==============================="
-qr_code_provider="https://qr.rossjrw.com/?url="
+qr_code_provider="https://qr.example.com/?url="
 bash lib/generate-comment.sh \
     "$action_repository" \
     "$action_version" \
@@ -77,4 +77,24 @@ qr_code_provider=""
 cat >&2 "$comment_file"
 echo >&2 "==============================="
 
-assert_file_contains "$comment_file" "qr.rossjrw.com/?url=$preview_url"
+assert_file_contains "$comment_file" "qr.example.com/?url=$preview_url"
+
+echo >&2 "test comment: deployment with QR code, backwards compatibility with qr-code:true"
+echo >&2 "==============================="
+qr_code_provider="true"
+bash lib/generate-comment.sh \
+    "$action_repository" \
+    "$action_version" \
+    "$preview_url" \
+    "$preview_branch" \
+    "$server_url" \
+    "$deployment_repository" \
+    "$action_start_time" \
+    "deploy" \
+    "$qr_code_provider" \
+    > "$comment_file"
+qr_code_provider=""
+cat >&2 "$comment_file"
+echo >&2 "==============================="
+
+assert_file_contains "$comment_file" "qr.rossjrw.com"

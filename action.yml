@@ -64,9 +64,9 @@ inputs:
         required: false
         default: "true"
     qr-code:
-        description: Whether to display a QR code in the sticky comment.
+        description: URL to a QR code provider to generate a QR code for the preview URL in the comment. Preview URL will be appended to the string. Or, set to "false" to disable QR code generation.
         required: false
-        default: "false"
+        default: "https://qr.rossjrw.com/?color.dark=0d1117&url="
     deploy-commit-message:
         description: The commit message to use when adding/updating a preview.
         required: false
@@ -147,7 +147,6 @@ runs:
               deployment_repository: ${{ inputs.deploy-repository }}
               token: ${{ inputs.token }}
               deprecated_custom_url: ${{ inputs.custom-url }}
-              qr_code_wanted: ${{ inputs.qr-code }}
           run: $GITHUB_ACTION_PATH/lib/main.sh
           shell: bash
 
@@ -203,7 +202,7 @@ runs:
                 "${{ inputs.deploy-repository }}" \
                 "${{ env.action_start_time }}" \
                 "deploy" \
-                "${{ env.qr_code_provider }}")
+                "${{ inputs.qr-code }}")
               {
                 echo "content<<EOF"
                 echo "$CONTENT"
