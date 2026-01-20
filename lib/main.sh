@@ -35,6 +35,10 @@ action_version=$("$GITHUB_ACTION_PATH/lib/find-current-git-tag.sh" -p "$action_r
 action_start_timestamp=$(date '+%s')
 action_start_time=$(date '+%Y-%m-%d %H:%M %Z')
 
+if [ "$qr_code_provider" = "true" ]; then
+    # Default to builtin provider
+    qr_code_provider="https://qr.rossjrw.com/?color.dark=0d1117&url="
+fi
 if [ "$qr_code_provider" = "false" ]; then
     qr_code_provider=""
 else

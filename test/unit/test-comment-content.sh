@@ -78,3 +78,23 @@ cat >&2 "$comment_file"
 echo >&2 "==============================="
 
 assert_file_contains "$comment_file" "qr.example.com/?url=$preview_url"
+
+echo >&2 "test comment: deployment with QR code, backwards compatibility with qr-code:true"
+echo >&2 "==============================="
+qr_code_provider="true"
+bash lib/generate-comment.sh \
+    "$action_repository" \
+    "$action_version" \
+    "$preview_url" \
+    "$preview_branch" \
+    "$server_url" \
+    "$deployment_repository" \
+    "$action_start_time" \
+    "deploy" \
+    "$qr_code_provider" \
+    > "$comment_file"
+qr_code_provider=""
+cat >&2 "$comment_file"
+echo >&2 "==============================="
+
+assert_file_contains "$comment_file" "qr.rossjrw.com"
