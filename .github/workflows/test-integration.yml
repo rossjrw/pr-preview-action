@@ -254,6 +254,85 @@ jobs:
                   source test/lib/cleanup-test-deployment.sh
                   cleanup_deployment "${{ env.TEST_DEPLOY_REPO }}" "${{ env.TEST_ID }}" "${{ secrets.test-deploy-token }}" "${{ env.TEST_UMBRELLA_DIR }}"
 
+    test-comment-pr-number-override:
+        name: "[Comment] PR number override"
+        runs-on: ubuntu-latest
+        env:
+            TEST_ID: test-comment-pr-number-override
+            TEST_UMBRELLA_DIR: pr-preview-run-${{ github.run_id }}
+            TEST_DEPLOY_REPO: rozzjrw/pr-preview-action-testing
+            # This is a persistent dummy PR in the test repo that receives test comments
+            DUMMY_PR_NUMBER: 1
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+              with:
+                  ref: ${{ inputs.sha }}
+
+            - name: Modify fixture with unique identifier
+              run: sed -i.bak 's/<p id="testid">.*<\/p>/<p id="testid">run-${{ github.run_id }}-deployed<\/p>/' test/fixtures/html/index.html
+
+            - name: Deploy with pr-number override to dummy PR
+              uses: ./
+              with:
+                  pr-number: ${{ env.DUMMY_PR_NUMBER }}
+                  umbrella-dir: ${{ env.TEST_UMBRELLA_DIR }}
+                  token: ${{ secrets.test-deploy-token }}
+                  deploy-repository: ${{ env.TEST_DEPLOY_REPO }}
+                  preview-branch: ${{ env.TEST_ID }}
+                  source-dir: test/fixtures/html
+                  action: deploy
+                  comment: true
+                  wait-for-pages-deployment: false
+                  git-config-name: GitHub Actions
+                  git-config-email: actions@github.com
+                  deploy-commit-message: deploy ${{ env.TEST_ID }} ${{ github.run_id }}
+                  remove-commit-message: remove ${{ env.TEST_ID }} ${{ github.run_id }}
+
+            - name: Verify comment
+              env:
+                  GITHUB_TOKEN: ${{ secrets.test-deploy-token }}
+                  DEPLOY_REPO: ${{ env.TEST_DEPLOY_REPO }}
+                  TEST_RUN_ID: ${{ github.run_id }}
+              run: bash test/integration/test-comment-pr-number-override.sh "verify-deploy" "${{ env.DUMMY_PR_NUMBER }}"
+
+            - name: Remove deployment
+              uses: ./
+              with:
+                  pr-number: ${{ env.DUMMY_PR_NUMBER }}
+                  umbrella-dir: ${{ env.TEST_UMBRELLA_DIR }}
+                  token: ${{ secrets.test-deploy-token }}
+                  deploy-repository: ${{ env.TEST_DEPLOY_REPO }}
+                  preview-branch: ${{ env.TEST_ID }}
+                  action: remove
+                  comment: true
+                  wait-for-pages-deployment: false
+                  git-config-name: GitHub Actions
+                  git-config-email: actions@github.com
+                  deploy-commit-message: deploy ${{ env.TEST_ID }} ${{ github.run_id }}
+                  remove-commit-message: remove ${{ env.TEST_ID }} ${{ github.run_id }}
+
+            - name: Verify comment
+              env:
+                  GITHUB_TOKEN: ${{ secrets.test-deploy-token }}
+                  DEPLOY_REPO: ${{ env.TEST_DEPLOY_REPO }}
+                  TEST_RUN_ID: ${{ github.run_id }}
+              run: bash test/integration/test-comment-pr-number-override.sh "verify-remove" "${{ env.DUMMY_PR_NUMBER }}"
+
+            - name: Cleanup comments
+              if: always()
+              env:
+                  GITHUB_TOKEN: ${{ secrets.test-deploy-token }}
+                  DEPLOY_REPO: ${{ env.TEST_DEPLOY_REPO }}
+                  TEST_RUN_ID: ${{ github.run_id }}
+              run: bash test/integration/test-comment-pr-number-override.sh "cleanup" "${{ env.DUMMY_PR_NUMBER }}"
+
+            - name: Cleanup deployment
+              if: always()
+              run: |
+                  source test/lib/cleanup-test-deployment.sh
+                  cleanup_deployment "${{ env.TEST_DEPLOY_REPO }}" "${{ env.TEST_ID }}" "${{ secrets.test-deploy-token }}" "${{ env.TEST_UMBRELLA_DIR }}"
+
     # Pages deployment test runs after git tests pass
     # This is the only test that uses the actual Pages branch and waits for deployment
     test-pages-lifecycle:
