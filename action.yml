@@ -16,6 +16,12 @@ inputs:
 
         required: false
         default: ${{ github.token }}
+    ssh-key:
+        description: >
+            A private SSH key to use for deployment via SSH, as an alternative to the token. Pass the key from a repository secret. The corresponding public key should be added as a deploy key with write access on the target repository.
+
+            Set to `true` to enable SSH endpoints without configuring the SSH client, if SSH has already been set up in a previous step.
+        required: false
     preview-branch:
         description: Branch on which the previews will be deployed.
         required: false
@@ -157,6 +163,7 @@ runs:
           uses: JamesIves/github-pages-deploy-action@4a3abc783e1a24aeb44c16e869ad83caf6b4cc23 # v4.7.4
           with:
               token: ${{ inputs.token }}
+              ssh-key: ${{ inputs.ssh-key }}
               repository-name: ${{ inputs.deploy-repository }}
               branch: ${{ inputs.preview-branch }}
               folder: ${{ inputs.source-dir }}
@@ -228,6 +235,7 @@ runs:
           uses: JamesIves/github-pages-deploy-action@4a3abc783e1a24aeb44c16e869ad83caf6b4cc23 # v4.7.4
           with:
               token: ${{ inputs.token }}
+              ssh-key: ${{ inputs.ssh-key }}
               repository-name: ${{ inputs.deploy-repository }}
               branch: ${{ inputs.preview-branch }}
               folder: ${{ env.empty_dir_path }}
