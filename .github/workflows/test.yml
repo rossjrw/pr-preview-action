@@ -1,0 +1,54 @@
+name: Tests
+
+on:
+    push:
+        branches:
+            - main
+    pull_request:
+        types: [opened, synchronize, reopened]
+    pull_request_target:
+        types: [opened, synchronize, reopened]
+    workflow_dispatch:
+
+concurrency:
+    group: test-${{ github.ref }}
+    cancel-in-progress: true
+
+jobs:
+    # Safe tests run on all PRs, including forks
+    test-unit:
+        name: Unit tests
+        # Skip on pull_request_target if already ran via pull_request (same-repo PRs)
+        if: |
+            github.event_name != 'pull_request_target' ||
+            github.event.pull_request.head.repo.full_name != github.repository
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+              with:
+                  # For pull_request_target, checkout the PR head safely
+                  ref: ${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.ref }}
+
+            - name: Run tests
+              run: bash test/run-unit-tests.sh
+
+    # Integration tests require secrets, so only run when secrets are available
+    integration-tests:
+        name: Integration tests
+        needs: [test-unit]
+        # Run integration tests when:
+        # 1. Push to main
+        # 2. Same-repo PR (secrets available via pull_request)
+        # 3. Forked PR (secrets available via pull_request_target)
+        if: |
+            github.event_name == 'push' ||
+            github.event_name == 'workflow_dispatch' ||
+            (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository) ||
+            (github.event_name == 'pull_request_target' && github.event.pull_request.head.repo.full_name != github.repository)
+        uses: ./.github/workflows/test-integration.yml
+        with:
+            ref: ${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.ref || github.ref }}
+            sha: ${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}
+        secrets:
+            test-deploy-token: ${{ secrets.TEST_DEPLOY_TOKEN }}
