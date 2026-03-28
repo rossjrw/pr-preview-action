@@ -1,0 +1,211 @@
+name: Deploy PR Preview
+
+on:
+    workflow_call:
+        inputs:
+            source-dir:
+                description: Directory containing files to deploy.
+                required: true
+                type: string
+            preview-branch:
+                description: Branch on which the previews will be deployed.
+                type: string
+                default: gh-pages
+            umbrella-dir:
+                description: Path to the directory containing all previews.
+                type: string
+                default: pr-preview
+            pages-base-url:
+                description: URL of the repo's GitHub Pages site.
+                type: string
+                default: ""
+            pages-base-path:
+                description: Path that GitHub Pages is served from.
+                type: string
+                default: ""
+            pr-number:
+                description: The PR number to use for the preview path. Defaults to the PR number from the GitHub event context.
+                type: string
+                default: ""
+            comment:
+                description: Whether to leave a sticky comment on the calling PR.
+                type: boolean
+                default: true
+            qr-code:
+                description: Whether to include a QR code in the PR comment.
+                type: boolean
+                default: true
+            action:
+                description: "Determines what this workflow will do when it is executed. Supported values: deploy, remove, auto (default)."
+                type: string
+                default: auto
+            deploy-commit-message:
+                description: The commit message to use when adding/updating a preview.
+                type: string
+                default: ""
+            remove-commit-message:
+                description: The commit message to use when removing a preview.
+                type: string
+                default: ""
+            commit-status-context:
+                description: The context string for commit statuses (e.g., shown as the status check name).
+                type: string
+                default: "Preview"
+            deploy-to-pages:
+                description: Whether to upload and deploy the Pages artifact. Set to false for git-only operations.
+                type: boolean
+                default: true
+        outputs:
+            deployment-action:
+                description: Resolved action (deploy, remove, none).
+                value: ${{ jobs.preview.outputs.deployment_action }}
+            preview-url:
+                description: Full URL to the preview.
+                value: ${{ jobs.preview.outputs.preview_url }}
+
+permissions:
+    contents: write
+    pull-requests: write
+    pages: write
+    id-token: write
+    statuses: write
+
+concurrency: preview-${{ github.ref }}-${{ inputs.pr-number || github.event.number }}
+
+jobs:
+    preview:
+        runs-on: ubuntu-latest
+        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+        outputs:
+            deployment_action: ${{ steps.setup.outputs.deployment_action }}
+            preview_url: ${{ steps.setup.outputs.preview_url }}
+        environment:
+            name: github-pages
+            url: ${{ steps.pages-deploy.outputs.page_url || steps.pages-deploy-remove.outputs.page_url }}
+        steps:
+            - name: Checkout caller repository
+              uses: actions/checkout@v4
+
+            - name: Checkout action source
+              uses: actions/checkout@v4
+              with:
+                  repository: PazerOP/pr-preview-action
+                  ref: ${{ github.job_workflow_sha }}
+                  path: .pr-preview-action
+
+            - name: Setup preview environment
+              id: setup
+              env:
+                  INPUT_ACTION: ${{ inputs.action }}
+                  INPUT_UMBRELLA_DIR: ${{ inputs.umbrella-dir }}
+                  INPUT_PAGES_BASE_URL: ${{ inputs.pages-base-url }}
+                  INPUT_PAGES_BASE_PATH: ${{ inputs.pages-base-path }}
+                  INPUT_PR_NUMBER: ${{ inputs.pr-number || github.event.number }}
+                  INPUT_ACTION_REF: ${{ github.job_workflow_sha }}
+              run: node .pr-preview-action/dist/setup.js
+              shell: bash
+
+            # DEPLOYMENT
+
+            - name: Set pending commit status
+              if: env.deployment_action == 'deploy'
+              env:
+                  INPUT_TOKEN: ${{ github.token }}
+                  INPUT_SHA: ${{ github.event.pull_request.head.sha }}
+                  INPUT_CONTEXT: ${{ inputs.commit-status-context }}
+              run: node .pr-preview-action/dist/status.js pending "Deploying preview..." "${{ env.preview_url }}"
+              shell: bash
+
+            - name: Deploy preview to branch
+              if: env.deployment_action == 'deploy'
+              env:
+                  INPUT_BRANCH: ${{ inputs.preview-branch }}
+                  INPUT_TOKEN: ${{ github.token }}
+                  INPUT_SOURCE_DIR: ${{ inputs.source-dir }}
+                  INPUT_TARGET_PATH: ${{ env.preview_file_path }}
+                  INPUT_COMMIT_MESSAGE: ${{ inputs.deploy-commit-message || format('Deploy preview for PR {0} 🛫', github.event.number) }}
+              run: node .pr-preview-action/dist/git-update.js deploy
+              shell: bash
+
+            - name: Upload Pages artifact
+              if: env.deployment_action == 'deploy' && inputs.deploy-to-pages
+              uses: actions/upload-pages-artifact@v4
+              with:
+                  path: __gh-pages-content
+
+            - name: Deploy to GitHub Pages
+              id: pages-deploy
+              if: env.deployment_action == 'deploy' && inputs.deploy-to-pages
+              uses: actions/deploy-pages@v4
+
+            - name: Set success commit status
+              if: |
+                  env.deployment_action == 'deploy' &&
+                  (steps.pages-deploy.outcome == 'success' || steps.pages-deploy.outcome == 'skipped')
+              env:
+                  INPUT_TOKEN: ${{ github.token }}
+                  INPUT_SHA: ${{ github.event.pull_request.head.sha }}
+                  INPUT_CONTEXT: ${{ inputs.commit-status-context }}
+              run: node .pr-preview-action/dist/status.js success "Preview is live!" "${{ env.preview_url }}"
+              shell: bash
+
+            - name: Post deploy comment
+              if: |
+                  env.deployment_action == 'deploy' &&
+                  inputs.comment &&
+                  (steps.pages-deploy.outcome == 'success' || steps.pages-deploy.outcome == 'skipped')
+              env:
+                  INPUT_TOKEN: ${{ github.token }}
+                  INPUT_PR_NUMBER: ${{ inputs.pr-number || github.event.number }}
+                  INPUT_PREVIEW_BRANCH: ${{ inputs.preview-branch }}
+                  INPUT_QR_CODE: ${{ inputs.qr-code }}
+                  INPUT_COMMENT: "true"
+              run: node .pr-preview-action/dist/comment.js
+              shell: bash
+
+            - name: Set failure commit status
+              if: |
+                  failure() &&
+                  env.deployment_action == 'deploy'
+              env:
+                  INPUT_TOKEN: ${{ github.token }}
+                  INPUT_SHA: ${{ github.event.pull_request.head.sha }}
+                  INPUT_CONTEXT: ${{ inputs.commit-status-context }}
+              run: node .pr-preview-action/dist/status.js failure "Preview deployment failed" "${{ env.preview_url }}"
+              shell: bash
+
+            # REMOVAL
+
+            - name: Remove preview from branch
+              if: env.deployment_action == 'remove'
+              env:
+                  INPUT_BRANCH: ${{ inputs.preview-branch }}
+                  INPUT_TOKEN: ${{ github.token }}
+                  INPUT_TARGET_PATH: ${{ env.preview_file_path }}
+                  INPUT_COMMIT_MESSAGE: ${{ inputs.remove-commit-message || format('Remove preview for PR {0} 🛬', github.event.number) }}
+              run: node .pr-preview-action/dist/git-update.js remove
+              shell: bash
+
+            - name: Upload Pages artifact for removal
+              if: env.deployment_action == 'remove' && inputs.deploy-to-pages
+              uses: actions/upload-pages-artifact@v4
+              with:
+                  path: __gh-pages-content
+
+            - name: Deploy removal to GitHub Pages
+              id: pages-deploy-remove
+              if: env.deployment_action == 'remove' && inputs.deploy-to-pages
+              uses: actions/deploy-pages@v4
+
+            - name: Post remove comment
+              if: |
+                  env.deployment_action == 'remove' &&
+                  inputs.comment
+              env:
+                  INPUT_TOKEN: ${{ github.token }}
+                  INPUT_PR_NUMBER: ${{ inputs.pr-number || github.event.number }}
+                  INPUT_PREVIEW_BRANCH: ${{ inputs.preview-branch }}
+                  INPUT_QR_CODE: ${{ inputs.qr-code }}
+                  INPUT_COMMENT: "true"
+              run: node .pr-preview-action/dist/comment.js
+              shell: bash

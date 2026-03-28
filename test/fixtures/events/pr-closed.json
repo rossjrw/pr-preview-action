@@ -1,0 +1,8 @@
+{
+  "action": "closed",
+  "pull_request": {
+    "head": {
+      "sha": "def4567890abc123"
+    }
+  }
+}

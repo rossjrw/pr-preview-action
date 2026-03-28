@@ -20,24 +20,6 @@ case "$test_step" in
         assert_url_contains "$EXPECTED_URL" "test-pages-lifecycle"
         echo "✓ Deployment verified via HTTP"
 
-        # Test wait-for-pages-lifecycle.sh can find the completed build
-        echo "Testing wait script can find existing build..."
-
-        DEPLOYED_SHA=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
-            -H "Accept: application/vnd.github.v3+json" \
-            "https://api.github.com/repos/$DEPLOY_REPO/git/refs/heads/$PREVIEW_BRANCH" \
-            | grep -o '"sha": "[^"]*"' | head -1 | cut -d'"' -f4)
-
-        echo "Testing with commit: ${DEPLOYED_SHA:0:7}"
-
-        bash "$(dirname "$0")/../../lib/wait-for-pages-deployment.sh" \
-            "$DEPLOY_REPO" \
-            "$DEPLOYED_SHA" \
-            "$PREVIEW_BRANCH" \
-            "$GITHUB_TOKEN" \
-            30
-
-        echo "✓ Wait script successfully found and verified the build"
         ;;
 
     removed)
