@@ -36,6 +36,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const child_process_1 = require("child_process");
 const fs = __importStar(require("fs"));
 const path = __importStar(require("path"));
+const inject_cache_bust_1 = require("./inject-cache-bust");
 function env(name) {
     return process.env[name] || "";
 }
@@ -77,6 +78,7 @@ if (mode === "deploy") {
     }
     fs.mkdirSync(target, { recursive: true });
     run(`cp -r "${path.join(workspace, sourceDir)}"/. "${target}/"`);
+    (0, inject_cache_bust_1.injectCacheBustScript)(target);
 }
 else {
     if (fs.existsSync(target)) {

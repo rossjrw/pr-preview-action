@@ -1,0 +1,37 @@
+import * as fs from "fs";
+import * as path from "path";
+
+const SCRIPT_TAG = `<script>(function(){var q=location.search;if(!q)return;document.addEventListener("click",function(e){var a=e.target.closest("a");if(!a)return;var h=a.getAttribute("href");if(!h||h.startsWith("#")||/^[a-z][a-z0-9+.-]*:/i.test(h))return;try{var u=new URL(h,location.href);if(u.origin!==location.origin)return;if(!u.search)u.search=q;a.href=u.pathname+u.search+u.hash}catch(e){}})})();</script>`;
+
+function findHtmlFiles(dir: string): string[] {
+  const results: string[] = [];
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      results.push(...findHtmlFiles(full));
+    } else if (entry.name.endsWith(".html") || entry.name.endsWith(".htm")) {
+      results.push(full);
+    }
+  }
+  return results;
+}
+
+export function injectCacheBustScript(targetDir: string): void {
+  const htmlFiles = findHtmlFiles(targetDir);
+  for (const file of htmlFiles) {
+    let content = fs.readFileSync(file, "utf8");
+    if (content.includes("</body>")) {
+      content = content.replace("</body>", SCRIPT_TAG + "</body>");
+    } else if (content.includes("</html>")) {
+      content = content.replace("</html>", SCRIPT_TAG + "</html>");
+    } else {
+      content += SCRIPT_TAG;
+    }
+    fs.writeFileSync(file, content);
+  }
+  if (htmlFiles.length > 0) {
+    console.log(
+      `Injected cache-bust script into ${htmlFiles.length} HTML file(s)`,
+    );
+  }
+}

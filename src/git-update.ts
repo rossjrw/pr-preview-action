@@ -1,6 +1,7 @@
 import { execSync } from "child_process";
 import * as fs from "fs";
 import * as path from "path";
+import { injectCacheBustScript } from "./inject-cache-bust";
 
 function env(name: string): string {
   return process.env[name] || "";
@@ -53,6 +54,7 @@ if (mode === "deploy") {
   }
   fs.mkdirSync(target, { recursive: true });
   run(`cp -r "${path.join(workspace, sourceDir)}"/. "${target}/"`);
+  injectCacheBustScript(target);
 } else {
   if (fs.existsSync(target)) {
     fs.rmSync(target, { recursive: true });
