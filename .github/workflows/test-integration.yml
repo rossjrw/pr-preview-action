@@ -43,7 +43,7 @@ jobs:
             PREVIEW_BRANCH: test-git-lifecycle
             UMBRELLA_DIR: pr-preview-run-${{ github.run_id }}
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@v6
               with:
                   ref: ${{ inputs.sha }}
             - run: bash test/integration/test-git-lifecycle.sh "deployed" "test-git-lifecycle-INITIALISED"
@@ -73,7 +73,7 @@ jobs:
             PREVIEW_BRANCH: test-git-lifecycle
             UMBRELLA_DIR: pr-preview-run-${{ github.run_id }}
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@v6
               with:
                   ref: ${{ inputs.sha }}
             - run: bash test/integration/test-git-lifecycle.sh "deployed" "test-git-lifecycle-REDEPLOYED"
@@ -103,7 +103,7 @@ jobs:
             PREVIEW_BRANCH: test-git-lifecycle
             UMBRELLA_DIR: pr-preview-run-${{ github.run_id }}
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@v6
               with:
                   ref: ${{ inputs.sha }}
             - run: bash test/integration/test-git-lifecycle.sh "removed"
@@ -114,7 +114,7 @@ jobs:
         if: failure()
         runs-on: ubuntu-latest
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@v6
               with:
                   ref: ${{ inputs.sha }}
             - run: |
@@ -148,7 +148,7 @@ jobs:
             TEST_UMBRELLA_DIR: pr-preview-run-${{ github.run_id }}
             CUSTOM_UMBRELLA_DIR: custom-previews-run-${{ github.run_id }}
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@v6
               with:
                   ref: ${{ inputs.sha }}
             - run: bash test/integration/test-git-custom-umbrella.sh
@@ -159,7 +159,7 @@ jobs:
         if: always()
         runs-on: ubuntu-latest
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@v6
               with:
                   ref: ${{ inputs.sha }}
             - run: |
@@ -222,7 +222,7 @@ jobs:
             PREVIEW_BRANCH: test-git-concurrent
             UMBRELLA_DIR: pr-preview-run-${{ github.run_id }}
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@v6
               with:
                   ref: ${{ inputs.sha }}
             - run: bash test/integration/test-git-concurrent.sh
@@ -233,7 +233,7 @@ jobs:
         if: always()
         runs-on: ubuntu-latest
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@v6
               with:
                   ref: ${{ inputs.sha }}
             - run: |
@@ -266,7 +266,7 @@ jobs:
             PREVIEW_BRANCH: main
             UMBRELLA_DIR: pr-preview-run-${{ github.run_id }}
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@v6
               with:
                   ref: ${{ inputs.sha }}
             - run: bash test/integration/test-pages-lifecycle.sh "deployed"
@@ -295,7 +295,7 @@ jobs:
             PREVIEW_BRANCH: main
             UMBRELLA_DIR: pr-preview-run-${{ github.run_id }}
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@v6
               with:
                   ref: ${{ inputs.sha }}
             - run: bash test/integration/test-pages-lifecycle.sh "removed"
@@ -306,7 +306,7 @@ jobs:
         if: failure()
         runs-on: ubuntu-latest
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@v6
               with:
                   ref: ${{ inputs.sha }}
             - run: |

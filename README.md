@@ -56,7 +56,7 @@ jobs:
         runs-on: ubuntu-latest
         if: github.event.action != 'closed'
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@v6
             - run: npm install && npm run build
             - uses: actions/upload-artifact@v4
               with:

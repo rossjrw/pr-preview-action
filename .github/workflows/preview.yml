@@ -84,10 +84,10 @@ jobs:
             url: ${{ steps.pages-deploy.outputs.page_url || steps.pages-deploy-remove.outputs.page_url }}
         steps:
             - name: Checkout caller repository
-              uses: actions/checkout@v4
+              uses: actions/checkout@v6
 
             - name: Checkout action source
-              uses: actions/checkout@v4
+              uses: actions/checkout@v6
               with:
                   repository: PazerOP/pr-preview-action
                   ref: ${{ github.job_workflow_sha }}
@@ -136,7 +136,7 @@ jobs:
             - name: Deploy to GitHub Pages
               id: pages-deploy
               if: env.deployment_action == 'deploy' && inputs.deploy-to-pages
-              uses: actions/deploy-pages@v4
+              uses: actions/deploy-pages@v5
 
             - name: Set success commit status
               if: |
@@ -195,7 +195,7 @@ jobs:
             - name: Deploy removal to GitHub Pages
               id: pages-deploy-remove
               if: env.deployment_action == 'remove' && inputs.deploy-to-pages
-              uses: actions/deploy-pages@v4
+              uses: actions/deploy-pages@v5
 
             - name: Post remove comment
               if: |
