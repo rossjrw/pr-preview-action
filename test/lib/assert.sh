@@ -59,6 +59,24 @@ assert_file_contains() {
     assert_contains "$content" "$needle" "$message"
 }
 
+assert_file_not_contains() {
+    local file="$1"
+    local needle="$2"
+    local message="${3:-File should not contain: $needle}"
+    echo >&2 "assert_file_not_contains: file='$file', needle='$needle', message='$message'"
+
+    if [ ! -f "$file" ]; then
+        echo -e "${RED}FAIL: File does not exist: $file${RESET}" >&2
+        return 1
+    fi
+
+    if grep -qF "$needle" "$file"; then
+        echo -e "${RED}FAIL: $message${RESET}" >&2
+        return 1
+    fi
+    return 0
+}
+
 assert_dir_exists() {
     local dir="$1"
     local message="${2:-Directory should exist: $dir}"

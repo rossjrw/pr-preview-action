@@ -53,5 +53,5 @@ cat >&2 "$comment_file"
 echo >&2 "==============================="
 
 # Should NOT contain a QR code
-assert_file_contains "$comment_file" "data:image/" && exit 1 || true
+assert_file_not_contains "$comment_file" "data:image/"
 assert_file_contains "$comment_file" "$preview_url"
