@@ -85,6 +85,8 @@ jobs:
         steps:
             - name: Checkout caller repository
               uses: actions/checkout@v6
+              with:
+                  sparse-checkout: ${{ inputs.source-dir }}
 
             - name: Checkout action source
               uses: actions/checkout@v6
@@ -92,6 +94,10 @@ jobs:
                   repository: PazerOP/pr-preview-action
                   ref: ${{ github.job_workflow_sha }}
                   path: .pr-preview-action
+
+            - name: Install action dependencies
+              run: npm install --prefix .pr-preview-action --omit=dev
+              shell: bash
 
             - name: Setup preview environment
               id: setup
