@@ -42,7 +42,7 @@ jobs:
 
 That's it. Permissions, concurrency, fork safety, and the GitHub Pages environment are all handled internally by the reusable workflow. You don't need to configure any of that.
 
-If your site needs a build step, add a separate job:
+If your site needs a build step, add a separate job and pass the artifact name:
 
 ```yaml
 name: Deploy PR previews
@@ -68,17 +68,20 @@ jobs:
         if: always()
         uses: PazerOP/pr-preview-action/.github/workflows/preview.yml@v1
         with:
-            source-dir: ./build/
+            artifact-name: build
         secrets: inherit
 ```
 
+The `artifact-name` input tells the workflow to download the named artifact instead of checking out the repository. The build job is skipped on PR close (`if: github.event.action != 'closed'`), and `if: always()` on the deploy job ensures cleanup still runs.
+
 ## Inputs
 
-All parameters are optional except `source-dir`.
+All parameters are optional. Either `source-dir` or `artifact-name` must be provided.
 
 | Input&nbsp;parameter | Description |
 | --- | --- |
-| `source-dir` | Directory containing files to deploy. E.g. `./dist/` or `./build/`. **Required.** |
+| `source-dir` | Directory containing files to deploy. E.g. `./dist/` or `./build/`. Required when `artifact-name` is not set. <br> Default: `"."` |
+| `artifact-name` | Name of a previously-uploaded artifact to use as the deploy source. When set, the sparse checkout of `source-dir` is skipped and the artifact is downloaded instead. |
 | `preview-branch` | Branch to save previews to. <br> Default: `gh-pages` |
 | `umbrella-dir` | Path to the directory containing all previews. <br> Default: `pr-preview` |
 | `action` | `deploy`, `remove`, or `auto`. `auto` deploys on `opened`/`reopened`/`synchronize` and removes on `closed`. <br> Default: `auto` |

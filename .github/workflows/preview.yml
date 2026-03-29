@@ -4,9 +4,15 @@ on:
     workflow_call:
         inputs:
             source-dir:
-                description: Directory containing files to deploy.
-                required: true
+                description: Directory containing files to deploy. Required when artifact-name is not set.
+                required: false
                 type: string
+                default: "."
+            artifact-name:
+                description: Name of a previously-uploaded artifact to use as the deploy source. When set, the sparse checkout of source-dir is skipped and the artifact is downloaded instead.
+                required: false
+                type: string
+                default: ""
             preview-branch:
                 description: Branch on which the previews will be deployed.
                 type: string
@@ -83,7 +89,15 @@ jobs:
             name: github-pages
             url: ${{ steps.pages-deploy.outputs.page_url || steps.pages-deploy-remove.outputs.page_url }}
         steps:
+            - name: Validate inputs
+              if: inputs.artifact-name != '' && inputs.source-dir != '.'
+              run: |
+                  echo "::error::Cannot specify both 'artifact-name' and 'source-dir'. Use one or the other."
+                  exit 1
+              shell: bash
+
             - name: Checkout caller repository
+              if: inputs.artifact-name == ''
               uses: actions/checkout@v6
               with:
                   sparse-checkout: ${{ inputs.source-dir }}
@@ -111,6 +125,13 @@ jobs:
               run: node .pr-preview-action/dist/setup.js
               shell: bash
 
+            - name: Download build artifact
+              if: inputs.artifact-name != '' && env.deployment_action == 'deploy'
+              uses: actions/download-artifact@v4
+              with:
+                  name: ${{ inputs.artifact-name }}
+                  path: __artifact-download
+
             # DEPLOYMENT
 
             - name: Set pending commit status
@@ -127,7 +148,7 @@ jobs:
               env:
                   INPUT_BRANCH: ${{ inputs.preview-branch }}
                   INPUT_TOKEN: ${{ github.token }}
-                  INPUT_SOURCE_DIR: ${{ inputs.source-dir }}
+                  INPUT_SOURCE_DIR: ${{ inputs.artifact-name != '' && '__artifact-download' || inputs.source-dir }}
                   INPUT_TARGET_PATH: ${{ env.preview_file_path }}
                   INPUT_COMMIT_MESSAGE: ${{ inputs.deploy-commit-message || format('Deploy preview for PR {0} 🛫', github.event.number) }}
               run: node .pr-preview-action/dist/git-update.js deploy
