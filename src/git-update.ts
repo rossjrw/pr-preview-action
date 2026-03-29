@@ -55,6 +55,10 @@ if (mode === "deploy") {
   fs.mkdirSync(target, { recursive: true });
   run(`cp -r "${path.join(workspace, sourceDir)}"/. "${target}/"`);
   injectCacheBustScript(target);
+  const shortSha = env("short_sha");
+  if (shortSha) {
+    fs.writeFileSync(path.join(target, "version.txt"), shortSha + "\n");
+  }
 } else {
   if (fs.existsSync(target)) {
     fs.rmSync(target, { recursive: true });
