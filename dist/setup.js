@@ -62,6 +62,9 @@ function removePrefixPath(basePath, originalPath) {
     return normOriginal;
 }
 function determineAutoAction(eventName, eventPath) {
+    if (eventName === "push") {
+        return "deploy";
+    }
     if (eventName !== "pull_request" && eventName !== "pull_request_target") {
         console.error(`unknown event ${eventName}; no action to take`);
         return "none";
@@ -104,12 +107,16 @@ const repository = env("GITHUB_REPOSITORY");
 const envFile = env("GITHUB_ENV");
 const outputFile = env("GITHUB_OUTPUT");
 const pagesBaseUrl = pagesBaseUrlInput || calculatePagesBaseUrl(repository);
-const previewFilePath = `${umbrellaDir}/pr-${prNumber}`;
-let previewUrlPath = removePrefixPath(pagesBasePath, previewFilePath);
-if (pagesBasePath &&
-    removePrefixPath("", previewFilePath) === previewUrlPath) {
-    console.warn(`::warning title=pages-base-path doesn't match::The pages-base-path directory (${pagesBasePath}) does not contain umbrella-dir (${umbrellaDir}). pages-base-path has been ignored. The value of umbrella-dir should start with the value of pages-base-path.`);
-    previewUrlPath = previewFilePath;
+const isPrEvent = eventName === "pull_request" || eventName === "pull_request_target";
+const previewFilePath = isPrEvent ? `${umbrellaDir}/pr-${prNumber}` : "";
+let previewUrlPath = "";
+if (previewFilePath) {
+    previewUrlPath = removePrefixPath(pagesBasePath, previewFilePath);
+    if (pagesBasePath &&
+        removePrefixPath("", previewFilePath) === previewUrlPath) {
+        console.warn(`::warning title=pages-base-path doesn't match::The pages-base-path directory (${pagesBasePath}) does not contain umbrella-dir (${umbrellaDir}). pages-base-path has been ignored. The value of umbrella-dir should start with the value of pages-base-path.`);
+        previewUrlPath = previewFilePath;
+    }
 }
 let deploymentAction = inputAction;
 if (deploymentAction === "auto") {
@@ -117,16 +124,18 @@ if (deploymentAction === "auto") {
     deploymentAction = determineAutoAction(eventName, eventPath);
     console.error(`Auto action is ${deploymentAction}`);
 }
-const basePreviewUrl = `https://${pagesBaseUrl}/${previewUrlPath}/`;
+const basePreviewUrl = previewUrlPath
+    ? `https://${pagesBaseUrl}/${previewUrlPath}/`
+    : `https://${pagesBaseUrl}/`;
 // Get short SHA for cache busting
 let shortSha = "";
 try {
     const event = JSON.parse(fs.readFileSync(eventPath, "utf8"));
-    const headSha = event.pull_request?.head?.sha || "";
+    const headSha = event.pull_request?.head?.sha || env("GITHUB_SHA") || "";
     shortSha = headSha.slice(0, 7);
 }
 catch {
-    // non-PR event, no SHA available
+    shortSha = (env("GITHUB_SHA") || "").slice(0, 7);
 }
 const previewUrl = shortSha
     ? `${basePreviewUrl}?v=${shortSha}`

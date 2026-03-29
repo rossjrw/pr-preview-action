@@ -72,7 +72,7 @@ permissions:
     id-token: write
     statuses: write
 
-concurrency: preview-${{ github.ref }}-${{ inputs.pr-number || github.event.number }}
+concurrency: preview-${{ github.ref }}-${{ inputs.pr-number || github.event.number || github.sha }}
 
 jobs:
     preview:
@@ -118,6 +118,7 @@ jobs:
                   INPUT_PAGES_BASE_PATH: ${{ inputs.pages-base-path }}
                   INPUT_PR_NUMBER: ${{ inputs.pr-number || github.event.number }}
                   INPUT_ACTION_REF: ${{ github.job_workflow_sha }}
+                  GITHUB_SHA: ${{ github.sha }}
               run: node .pr-preview-action/dist/setup.js
               shell: bash
 
@@ -131,7 +132,7 @@ jobs:
             # DEPLOYMENT
 
             - name: Set pending commit status
-              if: env.deployment_action == 'deploy'
+              if: env.deployment_action == 'deploy' && github.event_name == 'pull_request'
               env:
                   INPUT_TOKEN: ${{ github.token }}
                   INPUT_SHA: ${{ github.event.pull_request.head.sha }}
@@ -146,7 +147,8 @@ jobs:
                   INPUT_TOKEN: ${{ github.token }}
                   INPUT_SOURCE_DIR: ${{ inputs.artifact-name != '' && '__artifact-download' || inputs.source-dir }}
                   INPUT_TARGET_PATH: ${{ env.preview_file_path }}
-                  INPUT_COMMIT_MESSAGE: ${{ inputs.deploy-commit-message || format('Deploy preview for PR {0} 🛫', github.event.number) }}
+                  INPUT_UMBRELLA_DIR: ${{ inputs.umbrella-dir }}
+                  INPUT_COMMIT_MESSAGE: ${{ inputs.deploy-commit-message || (github.event_name == 'pull_request' && format('Deploy preview for PR {0} 🛫', github.event.number)) || format('Deploy from {0}', github.sha) }}
               run: node .pr-preview-action/dist/git-update.js deploy
               shell: bash
 
@@ -164,6 +166,7 @@ jobs:
             - name: Set success commit status
               if: |
                   env.deployment_action == 'deploy' &&
+                  github.event_name == 'pull_request' &&
                   (steps.pages-deploy.outcome == 'success' || steps.pages-deploy.outcome == 'skipped')
               env:
                   INPUT_TOKEN: ${{ github.token }}
@@ -176,6 +179,7 @@ jobs:
               if: |
                   env.deployment_action == 'deploy' &&
                   inputs.comment &&
+                  github.event_name == 'pull_request' &&
                   (steps.pages-deploy.outcome == 'success' || steps.pages-deploy.outcome == 'skipped')
               env:
                   INPUT_TOKEN: ${{ github.token }}
@@ -188,7 +192,8 @@ jobs:
             - name: Set failure commit status
               if: |
                   failure() &&
-                  env.deployment_action == 'deploy'
+                  env.deployment_action == 'deploy' &&
+                  github.event_name == 'pull_request'
               env:
                   INPUT_TOKEN: ${{ github.token }}
                   INPUT_SHA: ${{ github.event.pull_request.head.sha }}
@@ -204,7 +209,7 @@ jobs:
                   INPUT_BRANCH: ${{ inputs.preview-branch }}
                   INPUT_TOKEN: ${{ github.token }}
                   INPUT_TARGET_PATH: ${{ env.preview_file_path }}
-                  INPUT_COMMIT_MESSAGE: ${{ inputs.remove-commit-message || format('Remove preview for PR {0} 🛬', github.event.number) }}
+                  INPUT_COMMIT_MESSAGE: ${{ inputs.remove-commit-message || (github.event_name == 'pull_request' && format('Remove preview for PR {0} 🛬', github.event.number)) || format('Remove deployment from {0}', github.sha) }}
               run: node .pr-preview-action/dist/git-update.js remove
               shell: bash
 
@@ -222,7 +227,8 @@ jobs:
             - name: Post remove comment
               if: |
                   env.deployment_action == 'remove' &&
-                  inputs.comment
+                  inputs.comment &&
+                  github.event_name == 'pull_request'
               env:
                   INPUT_TOKEN: ${{ github.token }}
                   INPUT_PR_NUMBER: ${{ inputs.pr-number || github.event.number }}
