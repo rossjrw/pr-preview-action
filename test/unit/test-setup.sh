@@ -88,6 +88,7 @@ export GITHUB_OUTPUT=$(mktemp)
 export GITHUB_EVENT_NAME="push"
 export GITHUB_EVENT_PATH="$FIXTURES_DIR/push.json"
 export GITHUB_REPOSITORY="test-owner/test-repo"
+export GITHUB_REF="refs/heads/main"
 export GITHUB_SHA="fedcba9876543210"
 export INPUT_ACTION="auto"
 export INPUT_UMBRELLA_DIR="pr-preview"
@@ -107,6 +108,22 @@ assert_contains "$output_content" "deployment_action=deploy"
 assert_contains "$output_content" "preview_file_path="
 assert_contains "$output_content" "preview_url=https://test-owner.github.io/test-repo/?v=fedcba9"
 assert_contains "$output_content" "short_sha=fedcba9"
+
+echo >&2 "test setup: push to non-default branch returns none"
+echo >&2 "==============================="
+
+export GITHUB_ENV=$(mktemp)
+export GITHUB_OUTPUT=$(mktemp)
+export GITHUB_REF="refs/heads/feature-branch"
+
+node dist/setup.js
+
+output_content=$(cat "$GITHUB_OUTPUT")
+
+echo >&2 "OUTPUT content:"
+echo >&2 "$output_content"
+
+assert_contains "$output_content" "deployment_action=none"
 
 echo >&2 "test setup: push event SHA fallback to GITHUB_SHA"
 echo >&2 "==============================="

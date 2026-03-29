@@ -33,7 +33,14 @@ function removePrefixPath(basePath: string, originalPath: string): string {
 
 function determineAutoAction(eventName: string, eventPath: string): string {
   if (eventName === "push") {
-    return "deploy";
+    const event = JSON.parse(fs.readFileSync(eventPath, "utf8"));
+    const defaultBranch = event.repository?.default_branch;
+    const ref = env("GITHUB_REF");
+    if (defaultBranch && ref === `refs/heads/${defaultBranch}`) {
+      return "deploy";
+    }
+    console.error(`Push to non-default branch (${ref}), skipping`);
+    return "none";
   }
 
   if (eventName !== "pull_request" && eventName !== "pull_request_target") {

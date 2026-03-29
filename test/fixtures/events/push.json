@@ -1,4 +1,7 @@
 {
   "ref": "refs/heads/main",
-  "after": "abc1234567890def"
+  "after": "abc1234567890def",
+  "repository": {
+    "default_branch": "main"
+  }
 }
