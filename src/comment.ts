@@ -1,5 +1,3 @@
-import { execSync } from "child_process";
-import QRCode from "qrcode";
 import { githubApi } from "./github";
 
 const COMMENT_HEADER = "<!-- Sticky Pull Request Comment pr-preview -->";
@@ -8,39 +6,18 @@ function env(name: string): string {
   return process.env[name] || "";
 }
 
-async function generateQrDataUri(url: string): Promise<string> {
-  const pngBuffer = await QRCode.toBuffer(url, {
-    type: "png",
-    margin: 1,
-    scale: 2,
-  });
-  try {
-    const gifBuffer = execSync("convert png:- gif:-", { input: pngBuffer });
-    return `data:image/gif;base64,${gifBuffer.toString("base64")}`;
-  } catch {
-    return `data:image/png;base64,${pngBuffer.toString("base64")}`;
-  }
-}
-
-async function generateDeployComment(): Promise<string> {
+function generateDeployComment(): string {
   const actionVersion = env("action_version");
   const previewUrl = env("preview_url");
   const previewBranch = env("INPUT_PREVIEW_BRANCH") || "gh-pages";
   const serverUrl = env("GITHUB_SERVER_URL") || "https://github.com";
   const repository = env("GITHUB_REPOSITORY");
   const actionStartTime = env("action_start_time");
-  const qrCodeInput = env("INPUT_QR_CODE");
-
-  let qrCode = "";
-  if (qrCodeInput !== "false" && qrCodeInput !== "") {
-    const dataUri = await generateQrDataUri(previewUrl);
-    qrCode = `<img src="${dataUri}" height="100" align="right" alt="QR code for preview link">`;
-  }
 
   return `${COMMENT_HEADER}
 [PR Preview Action](https://github.com/pazerop/pr-preview-action) ${actionVersion}
 :---:
-| <p>${qrCode}</p> :rocket: View preview at <br> ${previewUrl} <br><br>
+| :rocket: View preview at <br> ${previewUrl} <br><br>
 | <h6>Built to branch [\`${previewBranch}\`](${serverUrl}/${repository}/tree/${previewBranch}) at ${actionStartTime}. <br> Preview is ready! <br><br> </h6>`;
 }
 
@@ -106,7 +83,7 @@ async function main(): Promise<void> {
 
   let body: string;
   if (deploymentAction === "deploy") {
-    body = await generateDeployComment();
+    body = generateDeployComment();
   } else if (deploymentAction === "remove") {
     body = generateRemoveComment();
   } else {

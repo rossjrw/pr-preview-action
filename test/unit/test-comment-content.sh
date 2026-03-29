@@ -13,13 +13,12 @@ export preview_url="https://test-owner.github.io/test-repo/pr-preview/pr-12345/?
 export action_start_time="2025-01-01 12:00 UTC"
 export INPUT_PREVIEW_BRANCH="gh-pages"
 export INPUT_COMMENT="true"
-export INPUT_QR_CODE="true"
 export DRY_RUN="true"
 export deployment_action="deploy"
 
 comment_file="comment-generated.md"
 
-echo >&2 "test comment: deployment with QR code (default)"
+echo >&2 "test comment: deployment"
 echo >&2 "==============================="
 node dist/comment.js > "$comment_file"
 cat >&2 "$comment_file"
@@ -29,9 +28,6 @@ assert_file_contains "$comment_file" "PR Preview Action"
 assert_file_contains "$comment_file" "$action_version"
 assert_file_contains "$comment_file" "$preview_url"
 assert_file_contains "$comment_file" "pr-preview"
-# QR code should be a data URI, not an external URL
-# QR code should be a data URI (GIF if ImageMagick available, PNG otherwise)
-assert_file_contains "$comment_file" "data:image/"
 
 echo >&2 "test comment: removal"
 echo >&2 "==============================="
@@ -43,15 +39,3 @@ echo >&2 "==============================="
 assert_file_contains "$comment_file" "PR Preview Action"
 assert_file_contains "$comment_file" "$action_version"
 assert_file_contains "$comment_file" "Preview removed"
-
-echo >&2 "test comment: deployment with QR code disabled"
-echo >&2 "==============================="
-export deployment_action="deploy"
-export INPUT_QR_CODE="false"
-node dist/comment.js > "$comment_file"
-cat >&2 "$comment_file"
-echo >&2 "==============================="
-
-# Should NOT contain a QR code
-assert_file_not_contains "$comment_file" "data:image/"
-assert_file_contains "$comment_file" "$preview_url"

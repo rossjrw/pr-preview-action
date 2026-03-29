@@ -4,12 +4,8 @@
   "private": true,
   "packageManager": "pnpm@10.29.3",
   "description": "Deploy PR preview to GitHub Pages via GitHub Actions artifact deployment",
-  "dependencies": {
-    "qrcode": "^1.5.4"
-  },
   "devDependencies": {
     "@types/node": "^22.15.0",
-    "@types/qrcode": "^1.5.6",
     "ts-node": "^10.9.2",
     "typescript": "^5.7.3"
   }

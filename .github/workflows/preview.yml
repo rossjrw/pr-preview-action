@@ -37,10 +37,6 @@ on:
                 description: Whether to leave a sticky comment on the calling PR.
                 type: boolean
                 default: true
-            qr-code:
-                description: Whether to include a QR code in the PR comment.
-                type: boolean
-                default: true
             action:
                 description: "Determines what this workflow will do when it is executed. Supported values: deploy, remove, auto (default)."
                 type: string
@@ -185,7 +181,6 @@ jobs:
                   INPUT_TOKEN: ${{ github.token }}
                   INPUT_PR_NUMBER: ${{ inputs.pr-number || github.event.number }}
                   INPUT_PREVIEW_BRANCH: ${{ inputs.preview-branch }}
-                  INPUT_QR_CODE: ${{ inputs.qr-code }}
                   INPUT_COMMENT: "true"
               run: node .pr-preview-action/dist/comment.js
               shell: bash
@@ -232,7 +227,6 @@ jobs:
                   INPUT_TOKEN: ${{ github.token }}
                   INPUT_PR_NUMBER: ${{ inputs.pr-number || github.event.number }}
                   INPUT_PREVIEW_BRANCH: ${{ inputs.preview-branch }}
-                  INPUT_QR_CODE: ${{ inputs.qr-code }}
                   INPUT_COMMENT: "true"
               run: node .pr-preview-action/dist/comment.js
               shell: bash

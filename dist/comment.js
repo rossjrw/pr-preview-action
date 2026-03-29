@@ -1,50 +1,25 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.COMMENT_HEADER = void 0;
 exports.generateDeployComment = generateDeployComment;
 exports.generateRemoveComment = generateRemoveComment;
-const child_process_1 = require("child_process");
-const qrcode_1 = __importDefault(require("qrcode"));
 const github_1 = require("./github");
 const COMMENT_HEADER = "<!-- Sticky Pull Request Comment pr-preview -->";
 exports.COMMENT_HEADER = COMMENT_HEADER;
 function env(name) {
     return process.env[name] || "";
 }
-async function generateQrDataUri(url) {
-    const pngBuffer = await qrcode_1.default.toBuffer(url, {
-        type: "png",
-        margin: 1,
-        scale: 2,
-    });
-    try {
-        const gifBuffer = (0, child_process_1.execSync)("convert png:- gif:-", { input: pngBuffer });
-        return `data:image/gif;base64,${gifBuffer.toString("base64")}`;
-    }
-    catch {
-        return `data:image/png;base64,${pngBuffer.toString("base64")}`;
-    }
-}
-async function generateDeployComment() {
+function generateDeployComment() {
     const actionVersion = env("action_version");
     const previewUrl = env("preview_url");
     const previewBranch = env("INPUT_PREVIEW_BRANCH") || "gh-pages";
     const serverUrl = env("GITHUB_SERVER_URL") || "https://github.com";
     const repository = env("GITHUB_REPOSITORY");
     const actionStartTime = env("action_start_time");
-    const qrCodeInput = env("INPUT_QR_CODE");
-    let qrCode = "";
-    if (qrCodeInput !== "false" && qrCodeInput !== "") {
-        const dataUri = await generateQrDataUri(previewUrl);
-        qrCode = `<img src="${dataUri}" height="100" align="right" alt="QR code for preview link">`;
-    }
     return `${COMMENT_HEADER}
 [PR Preview Action](https://github.com/pazerop/pr-preview-action) ${actionVersion}
 :---:
-| <p>${qrCode}</p> :rocket: View preview at <br> ${previewUrl} <br><br>
+| :rocket: View preview at <br> ${previewUrl} <br><br>
 | <h6>Built to branch [\`${previewBranch}\`](${serverUrl}/${repository}/tree/${previewBranch}) at ${actionStartTime}. <br> Preview is ready! <br><br> </h6>`;
 }
 function generateRemoveComment() {
@@ -87,7 +62,7 @@ async function main() {
     }
     let body;
     if (deploymentAction === "deploy") {
-        body = await generateDeployComment();
+        body = generateDeployComment();
     }
     else if (deploymentAction === "remove") {
         body = generateRemoveComment();

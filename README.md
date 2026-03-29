@@ -7,7 +7,6 @@ Features:
 -   Creates and deploys previews of pull requests to your GitHub Pages site
 -   Leaves a comment on the pull request with a link to the preview so that you and your team can collaborate on new features faster
 -   Updates the deployment and the comment whenever new commits are pushed to the pull request
--   Includes a QR code in the preview comment for easy mobile access
 -   Sets commit statuses on the PR head SHA to indicate deployment progress
 -   Cache-busted preview URLs ensure you always see the latest content
 -   Cleans up after itself &mdash; removes deployed previews when the pull request is closed
@@ -86,7 +85,6 @@ All parameters are optional. Either `source-dir` or `artifact-name` must be prov
 | `umbrella-dir` | Path to the directory containing all previews. <br> Default: `pr-preview` |
 | `action` | `deploy`, `remove`, or `auto`. `auto` deploys on `opened`/`reopened`/`synchronize` and removes on `closed`. <br> Default: `auto` |
 | `comment` | Whether to leave a sticky comment on the PR. <br> Default: `"true"` |
-| `qr-code` | Whether to include a QR code in the PR comment. Set to `"false"` to disable. <br> Default: `"true"` |
 | `commit-status-context` | The context string for commit statuses. <br> Default: `"Preview"` |
 | `pr-number` | The PR number to use for the preview path. <br> Default: from event context |
 | `pages-base-url` | Base URL of the GitHub Pages site. <br> Default: auto-detected |
