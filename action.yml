@@ -154,7 +154,7 @@ runs:
 
         - name: Deploy preview directory
           if: env.deployment_action == 'deploy'
-          uses: JamesIves/github-pages-deploy-action@4a3abc783e1a24aeb44c16e869ad83caf6b4cc23 # v4.7.4
+          uses: JamesIves/github-pages-deploy-action@d92aa235d04922e8f08b40ce78cc5442fcfbfa2f # v4.8.0
           with:
               token: ${{ inputs.token }}
               repository-name: ${{ inputs.deploy-repository }}
@@ -216,7 +216,7 @@ runs:
               (inputs.comment == 'true' || inputs.comment == true) &&
               (env.deployment_status == 'success' || env.deployment_status == 'skipped') &&
               steps.deploy-comment.outcome == 'success'
-          uses: marocchino/sticky-pull-request-comment@67d0dec7b07ed060a405f9b2a64b8ab319fdd7db # v2.9.2
+          uses: marocchino/sticky-pull-request-comment@70d2764d1a7d5d9560b100cbea0077fc8f633987 # v3.0.2
           with:
               header: pr-preview
               message: ${{ steps.deploy-comment.outputs.content }}
@@ -225,7 +225,7 @@ runs:
 
         - name: Remove preview directory
           if: env.deployment_action == 'remove'
-          uses: JamesIves/github-pages-deploy-action@4a3abc783e1a24aeb44c16e869ad83caf6b4cc23 # v4.7.4
+          uses: JamesIves/github-pages-deploy-action@d92aa235d04922e8f08b40ce78cc5442fcfbfa2f # v4.8.0
           with:
               token: ${{ inputs.token }}
               repository-name: ${{ inputs.deploy-repository }}
@@ -287,7 +287,7 @@ runs:
               (inputs.comment == 'true' || inputs.comment == true) &&
               (env.deployment_status == 'success' || env.deployment_status == 'skipped') &&
               steps.remove-comment.outcome == 'success'
-          uses: marocchino/sticky-pull-request-comment@67d0dec7b07ed060a405f9b2a64b8ab319fdd7db # v2.9.2
+          uses: marocchino/sticky-pull-request-comment@70d2764d1a7d5d9560b100cbea0077fc8f633987 # v3.0.2
           with:
               header: pr-preview
               message: ${{ steps.remove-comment.outputs.content }}
