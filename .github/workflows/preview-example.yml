@@ -20,3 +20,4 @@ jobs:
               uses: ./
               with:
                   source-dir: test/fixtures/sample
+                  qr-code: true
