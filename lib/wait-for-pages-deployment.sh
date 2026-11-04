@@ -66,7 +66,7 @@ wait_for_pages_deployment() {
             echo >&2 "Exact commit build not found after ${elapsed}s"
 
             if [ ! -d "$clone_dir/.git" ]; then
-                echo >&2 "Cloning repository to check for descendant commits..."
+                echo >&2 "Clone repository to check for descendant commits..."
                 git clone --depth=50 --single-branch --branch="$BRANCH" "https://oauth2:${TOKEN}@${GITHUB_SERVER_URL#https://}/${REPO}.git" "$clone_dir"
                 pushd "$clone_dir" > /dev/null
                 trap 'popd > /dev/null' RETURN
