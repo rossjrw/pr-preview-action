@@ -1,7 +1,4 @@
-- name: Deploy PR Preview
-  uses: rossjrw/pr-preview-action@v1.8.1
-
-blank_issues_enabled: true
+blank_issues_enabled: false
 contact_links:
     - name: Start a Discussion
       url: https://github.com/rossjrw/pr-preview-action/discussions/new?category=q-a
