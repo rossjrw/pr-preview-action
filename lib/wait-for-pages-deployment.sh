@@ -67,7 +67,7 @@ wait_for_pages_deployment() {
 
             if [ ! -d "$clone_dir/.git" ]; then
                 echo >&2 "Cloning repository to check for descendant commits..."
-                git clone --depth=50 --single-branch --branch="$BRANCH" "https://oauth2:${TOKEN}@${GITHUB_SERVER_URL#https://}/${REPO}.git" "$clone_dir"
+                git clone --depth=50 --single-branch --branch="$BRANCH" "https://oauth2:${TOKEN}@github.com/${REPO}.git" "$clone_dir"
                 pushd "$clone_dir" > /dev/null
                 trap 'popd > /dev/null' RETURN
             else
@@ -126,7 +126,7 @@ wait_for_pages_deployment() {
             -H "Authorization: Bearer $TOKEN" \
             -H "Accept: application/vnd.github+json" \
             -H "X-GitHub-Api-Version: 2022-11-28" \
-            "$GITHUB_API_URL/repos/$REPO/pages/builds/$build_id")
+            "https://api.github.com/repos/$REPO/pages/builds/$build_id")
 
         build_status=$(extract_status_from_response "$build_response")
 
