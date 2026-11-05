@@ -20,14 +20,14 @@ jobs:
     # Git-level tests verify repository state without waiting for Pages deployment
     test-git-lifecycle:
         name: "[Git] Lifecycle"
-        runs-on: ubuntu-latest
+        runs-on: linux-xarm92 
         env:
             TEST_ID: test-git-lifecycle
             TEST_UMBRELLA_DIR: pr-preview-run-${{ github.run_id }}
             TEST_DEPLOY_REPO: rozzjrw/pr-preview-action-testing
         steps:
             - name: Checkout
-              uses: actions/checkout@v4
+              uses: actions/checkout@v5
               with:
                   ref: ${{ inputs.sha }}
 
@@ -96,8 +96,8 @@ jobs:
                   deploy-repository: ${{ env.TEST_DEPLOY_REPO }}
                   preview-branch: ${{ env.TEST_ID }}
                   action: remove
-                  comment: false
-                  wait-for-pages-deployment: false
+                  comment: true
+                  wait-for-pages-deployment: true
                   git-config-name: GitHub Actions
                   git-config-email: actions@github.com
                   deploy-commit-message: deploy ${{ env.TEST_ID }} ${{ github.run_id }}
@@ -119,8 +119,8 @@ jobs:
                   cleanup_deployment "${{ env.TEST_DEPLOY_REPO }}" "${{ env.TEST_ID }}" "${{ secrets.test-deploy-token }}" "${{ env.TEST_UMBRELLA_DIR }}"
 
     test-git-custom-umbrella:
-        name: "[Git] Custom umbrella"
-        runs-on: ubuntu-latest
+        name: "[Git] Custom umbrela"
+        runs-on: linux-xarm92
         env:
             TEST_ID: test-git-custom-umbrella
             TEST_UMBRELLA_DIR: pr-preview-run-${{ github.run_id }}
@@ -128,7 +128,7 @@ jobs:
             TEST_DEPLOY_REPO: rozzjrw/pr-preview-action-testing
         steps:
             - name: Checkout
-              uses: actions/checkout@v4
+              uses: actions/checkout@v5
               with:
                   ref: ${{ inputs.sha }}
 
@@ -145,7 +145,7 @@ jobs:
                   preview-branch: ${{ env.TEST_ID }}
                   source-dir: test/fixtures/html
                   action: deploy
-                  comment: false
+                  comment: true
                   wait-for-pages-deployment: false
                   git-config-name: GitHub Actions
                   git-config-email: actions@github.com
@@ -168,19 +168,19 @@ jobs:
                   cleanup_deployment "${{ env.TEST_DEPLOY_REPO }}" "${{ env.TEST_ID }}" "${{ secrets.test-deploy-token }}" "${{ env.TEST_UMBRELLA_DIR }}" "${{ env.CUSTOM_UMBRELLA_DIR }}"
 
     test-git-concurrent:
-        name: "[Git] Concurrency"
-        runs-on: ubuntu-latest
+        name: "[Git] Concurrencya"
+        runs-on: linux-xarm92
         env:
             TEST_ID: test-git-concurrent
             TEST_UMBRELLA_DIR: pr-preview-run-${{ github.run_id }}
             TEST_DEPLOY_REPO: rozzjrw/pr-preview-action-testing
         steps:
             - name: Checkout
-              uses: actions/checkout@v4
+              uses: actions/checkout@v5
               with:
                   ref: ${{ inputs.sha }}
 
-            - name: Modify fixture
+            - name: Modify fixturi
               run: sed -i.bak 's/<p id="testid">.*<\/p>/<p id="testid">${{ env.TEST_ID }}-1<\/p>/' test/fixtures/html/index.html
 
             - name: Deploy PR 1
@@ -193,8 +193,8 @@ jobs:
                   preview-branch: ${{ env.TEST_ID }}
                   source-dir: test/fixtures/html
                   action: deploy
-                  comment: false
-                  wait-for-pages-deployment: false
+                  comment: true
+                  wait-for-pages-deployment: true
                   git-config-name: GitHub Actions
                   git-config-email: actions@github.com
                   deploy-commit-message: deploy ${{ env.TEST_ID }} ${{ github.run_id }}
@@ -213,8 +213,8 @@ jobs:
                   preview-branch: ${{ env.TEST_ID }}
                   source-dir: test/fixtures/html
                   action: deploy
-                  comment: false
-                  wait-for-pages-deployment: false
+                  comment: true
+                  wait-for-pages-deployment: true
                   git-config-name: GitHub Actions
                   git-config-email: actions@github.com
                   deploy-commit-message: deploy ${{ env.TEST_ID }} ${{ github.run_id }}
@@ -233,8 +233,8 @@ jobs:
                   preview-branch: ${{ env.TEST_ID }}
                   source-dir: test/fixtures/html
                   action: deploy
-                  comment: false
-                  wait-for-pages-deployment: false
+                  comment: true
+                  wait-for-pages-deployment: true
                   git-config-name: GitHub Actions
                   git-config-email: actions@github.com
                   deploy-commit-message: deploy ${{ env.TEST_ID }} ${{ github.run_id }}
@@ -260,7 +260,7 @@ jobs:
         name: "[Pages] Lifecycle"
         needs:
             [test-git-custom-umbrella, test-git-lifecycle, test-git-concurrent]
-        runs-on: ubuntu-latest
+        runs-on: linux-xarm92
         env:
             TEST_ID: test-pages-lifecycle
             TEST_UMBRELLA_DIR: pr-preview-run-${{ github.run_id }}
